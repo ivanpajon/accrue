@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ChartNoAxesCombined, CircleHelp, DollarSign, Euro, Info, Layers3, Languages, Monitor, Moon, Sun, Plus, RotateCcw, TrendingUp, Wallet, X } from 'lucide-react';
+import { ChartNoAxesCombined, CircleHelp, DollarSign, Euro, CodeXml, Info, Layers3, Languages, Monitor, Moon, Sun, Plus, RotateCcw, TrendingUp, Wallet, X } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as ChartTooltip, XAxis, YAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
@@ -19,7 +19,7 @@ import { locales, translator, type MessageKey } from '@/lib/i18n';
 import { usePreferences } from '@/lib/store';
 import { ConfigurationContext, SavedConfigurations } from '@/components/saved-configurations';
 import { ContributionPhase } from '@/components/contribution-phase';
-import { APP_NAME } from '@/lib/brand';
+import { APP_NAME, REPOSITORY_URL } from '@/lib/brand';
 import { ProjectionExports } from '@/components/projection-exports';
 import { STORAGE_KEY, type Preferences } from '@/lib/preferences';
 
@@ -151,7 +151,7 @@ export default function Home() {
           </section>
           <p className="projection-note"><Info size={15} /><span>{t('note')}</span></p>
         </>}
-      </section></div><footer><span className="footer-brand">{APP_NAME}</span><span>{t('footer')}</span><span className="footer-right">{t('footerRight')}</span></footer>
+      </section></div><footer><span className="footer-brand">{APP_NAME}</span><span>{t('footer')}</span><span className="footer-right">{t('footerRight')}</span><Button asChild variant="ghost" size="sm" className="text-muted-foreground"><a href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer" aria-label={t('githubLink')} title={t('githubLink')}><CodeXml aria-hidden="true" />GitHub</a></Button></footer>
     </main>
   </div></TooltipProvider>;
 }
