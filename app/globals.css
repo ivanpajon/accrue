@@ -372,3 +372,12 @@ footer{flex-wrap:wrap;gap:10px}
 .interest-rate-input{flex:1;min-width:0}
 .interest-controls>.compounding-choice{flex:0 0 7.25rem;width:7.25rem;min-width:0;padding-inline:10px}
 .interest-controls>.interest-rate-input:focus-within{position:relative;z-index:1}
+
+.account-status{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muted-foreground);font-size:13px;margin-bottom:12px}
+.account-status[role=alert]{padding:12px;border:1px solid var(--border);border-radius:var(--radius);color:var(--foreground)}
+.account-status button{margin-left:auto}
+.sign-in-page{min-height:100dvh;display:grid;place-items:center;padding:24px}
+.sign-in-card{width:100%;max-width:460px;padding:32px}
+.sign-in-card h1{font-size:26px;margin:28px 0 12px}
+.sign-in-card p{font-size:16px;color:var(--muted-foreground);line-height:1.6;margin-bottom:24px}
+.sign-in-language{margin-top:16px}

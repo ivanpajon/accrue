@@ -2,6 +2,11 @@ import { APP_NAME, APP_SLUG } from './brand.ts';
 export type Language = 'en' | 'es';
 export const locales: Record<Language, string> = { en: 'en-US', es: 'es-ES' };
 const en = {
+  newerVersion: 'Newer version available',
+  signInTitle: 'Your plans, wherever you are.', signInDescription: 'Sign in to keep your investment plans and preferences in your account.', signIn: 'Sign in with ChatGPT', signOut: 'Sign out', account: 'Your account', retry: 'Try again',
+  accountLoading: 'Loading your account…', accountSyncing: 'Syncing with your account…', accountConnected: 'Connected to your account',
+  sessionExpired: 'Your session has expired. Sign in again to save changes.', configurationConflict: 'This plan changed on another device. Load it again or save your edits as a copy.',
+
   saveImage: 'Save as image', exportPdf: 'Export PDF', exportPreparing: 'Preparing…', exportReady: 'Your export is ready.', exportError: 'The export could not be created. Please try again.', exportChooseSeries: 'Show at least one chart series to save an image.', exportImageHint: 'Download a high-resolution PNG of the visible chart series.', exportPdfHint: 'Download a report with all settings, phases, and chart series.',
   reportTitle: 'Investment report', reportCreated: 'Prepared on {date}', reportPhase: 'Phase', reportYears: 'Years', reportAmount: 'Contribution', reportRecurrence: 'Recurrence', reportPhaseNote: 'Start and end years are included. Gaps have no contributions; overlapping phases add their contributions together.', reportFooter: 'Illustrative projection · Returns are not guaranteed',
 
@@ -37,7 +42,7 @@ const en = {
   saved: "Saved",
   cancel: "Cancel",
   saveConfiguration: "Save configuration",
-  saveConfigurationDescription: "Give your investment settings and contribution plan a name. Only configurations you save are kept in this browser.",
+  saveConfigurationDescription: "Give your investment settings and contribution plan a name. Only configurations you explicitly save are kept in your account.",
   configurationName: "Configuration name",
   configurationNamePlaceholder: "e.g. Retirement plan",
   configurationNameError: "Enter a name with 1–80 characters.",
@@ -46,7 +51,7 @@ const en = {
   configurationReplaceNote: "“{name}” already exists. Replace it with your current configuration, or use a new name to save a copy.",
   replaceConfiguration: "Replace",
   configurationLimit: "You can save up to 50 configurations. Delete one before saving another.",
-  configurationStorageError: "Could not save changes in this browser. Check that browser storage is available and has free space, then try again.",
+  configurationStorageError: "Could not sync with your account. Your current edits are still here. Check your connection and try again.",
   savedConfigurations: "Saved configurations",
   loadConfigurationDescription: "Choose a configuration to load. Your language, currency, and appearance stay the same.",
   loadDraftWarning: "Loading replaces your current unsaved changes. Save them first if you want to keep them.",
@@ -70,7 +75,7 @@ const en = {
   assumptions: 'Calculation assumptions', formula: 'Growth between deposits uses the equivalent periodic rate: (1 + annual rate ÷ compounds per year) raised to the number of compounding periods elapsed. Partial periods accrue proportionally in the exponent.',
   calendar: 'A financial year uses 12 months, 52 weeks, or 26 two-week periods. Recurrence restarts at each phase. Beginning-of-period deposits earn growth during that period; end-of-period deposits start earning afterward.',
   caveats: 'Projections use a constant rate and exclude tax, fees, and inflation. Currency changes labels only and does not convert amounts.',
-  storageNote: 'Language, currency, and appearance save automatically. Use Save to keep a named investment configuration, then the folder button to load it later. Unsaved edits are cleared on reload. Resetting the example keeps your saved configurations and preferences.',
+  storageNote: 'Language, currency, and appearance save automatically to your signed-in account. Use Save to keep a named investment configuration, then the folder button to load it later. Unsaved edits are cleared on reload. Resetting the example keeps your saved configurations and preferences.',
   eyebrow: 'PLAN TODAY. GROW TOMORROW.', heading: 'Compound interest calculator', subtitle: 'See what your money could become, one contribution at a time.',
   mobileBalance: 'Projected balance in {years} years', mobileDetails: '{contributed} contributed · {gains} interest', settings: 'Investment settings', investment: 'Your investment', reset: 'Reset to example', initial: 'Initial investment', rate: 'Annual interest rate', compounded: 'Compounded', compounding: 'Compounding frequency', period: 'Investment period', periodYears: 'Investment period in years', years: 'years', yearSingle: 'Year {year}', yearRange: 'Years {start}–{end}', yearCount: '{count} year', yearsCount: '{count} years',
   daily: 'Daily', monthly: 'Monthly', weekly: 'Weekly', fortnightly: 'Every 2 weeks', quarterly: 'Quarterly', halfYearly: 'Half-yearly', yearly: 'Yearly',
@@ -83,6 +88,10 @@ const en = {
 };
 export type MessageKey = keyof typeof en;
 const es: Record<MessageKey, string> = {
+  newerVersion: 'Hay una versión más reciente',
+  signInTitle: 'Tus planes, estés donde estés.', signInDescription: 'Inicia sesión para guardar tus planes de inversión y preferencias en tu cuenta.', signIn: 'Iniciar sesión con ChatGPT', signOut: 'Cerrar sesión', account: 'Tu cuenta', retry: 'Reintentar',
+  accountLoading: 'Cargando tu cuenta…', accountSyncing: 'Sincronizando con tu cuenta…', accountConnected: 'Conectado a tu cuenta',
+  sessionExpired: 'Tu sesión ha caducado. Vuelve a iniciarla para guardar los cambios.', configurationConflict: 'Este plan cambió en otro dispositivo. Vuelve a cargarlo o guarda tus cambios como una copia.',
   saveImage: 'Guardar imagen', exportPdf: 'Exportar PDF', exportPreparing: 'Preparando…', exportReady: 'Tu archivo está listo.', exportError: 'No se pudo crear el archivo. Inténtalo de nuevo.', exportChooseSeries: 'Muestra al menos una serie del gráfico para guardar una imagen.', exportImageHint: 'Descarga un PNG de alta resolución con las series visibles del gráfico.', exportPdfHint: 'Descarga un informe con todos los ajustes, fases y series del gráfico.',
   reportTitle: 'Informe de inversión', reportCreated: 'Preparado el {date}', reportPhase: 'Fase', reportYears: 'Años', reportAmount: 'Aportación', reportRecurrence: 'Frecuencia', reportPhaseNote: 'Los años de inicio y fin están incluidos. En las pausas no hay aportaciones; si varias fases coinciden, sus aportaciones se suman.', reportFooter: 'Proyección orientativa · La rentabilidad no está garantizada',
 
@@ -118,7 +127,7 @@ const es: Record<MessageKey, string> = {
   saved: "Guardado",
   cancel: "Cancelar",
   saveConfiguration: "Guardar configuración",
-  saveConfigurationDescription: "Pon un nombre a tu inversión y a tu plan de aportaciones. Solo se conservan en este navegador las configuraciones que guardes.",
+  saveConfigurationDescription: "Pon un nombre a tu inversión y a tu plan de aportaciones. Solo se conservan en tu cuenta las configuraciones que guardes explícitamente.",
   configurationName: "Nombre de la configuración",
   configurationNamePlaceholder: "p. ej. Plan de jubilación",
   configurationNameError: "Escribe un nombre de entre 1 y 80 caracteres.",
@@ -127,7 +136,7 @@ const es: Record<MessageKey, string> = {
   configurationReplaceNote: "“{name}” ya existe. Reemplázala con la configuración actual o elige otro nombre para guardar una copia.",
   replaceConfiguration: "Reemplazar",
   configurationLimit: "Puedes guardar hasta 50 configuraciones. Elimina una antes de guardar otra.",
-  configurationStorageError: "No se pudieron guardar los cambios en este navegador. Comprueba que el almacenamiento del navegador esté disponible y tenga espacio, e inténtalo de nuevo.",
+  configurationStorageError: "No se pudo sincronizar con tu cuenta. Tus cambios siguen aquí. Comprueba tu conexión y vuelve a intentarlo.",
   savedConfigurations: "Configuraciones guardadas",
   loadConfigurationDescription: "Elige una configuración para cargar. El idioma, la moneda y la apariencia se mantienen.",
   loadDraftWarning: "Al cargar se reemplazan tus cambios sin guardar. Guárdalos antes si quieres conservarlos.",
@@ -151,7 +160,7 @@ const es: Record<MessageKey, string> = {
   assumptions: 'Supuestos del cálculo', formula: 'El crecimiento entre aportaciones utiliza el tipo periódico equivalente: (1 + tipo anual ÷ capitalizaciones por año) elevado al número de períodos de capitalización transcurridos. Los períodos parciales se reflejan proporcionalmente en el exponente.',
   calendar: 'Un año financiero equivale a 12 meses, 52 semanas o 26 períodos de dos semanas. La frecuencia se reinicia al comenzar cada fase. Las aportaciones al inicio generan intereses durante ese período; las aportaciones al final empiezan a generarlos después.',
   caveats: 'Las proyecciones usan un tipo constante y no incluyen impuestos, comisiones ni inflación. Cambiar la moneda solo cambia el formato; no convierte los importes.',
-  storageNote: 'El idioma, la moneda y la apariencia se guardan automáticamente. Usa Guardar para conservar una configuración con nombre y el botón de carpeta para cargarla después. Los cambios sin guardar se descartan al recargar. Restablecer el ejemplo conserva las configuraciones guardadas y tus preferencias.',
+  storageNote: 'El idioma, la moneda y la apariencia se guardan automáticamente en tu cuenta. Usa Guardar para conservar una configuración con nombre y el botón de carpeta para cargarla después. Los cambios sin guardar se descartan al recargar. Restablecer el ejemplo conserva las configuraciones guardadas y tus preferencias.',
   eyebrow: 'PLANIFICA HOY. CRECE MAÑANA.', heading: 'Calculadora de interés compuesto', subtitle: 'Descubre hasta dónde puede llegar tu dinero, aportación a aportación.',
   mobileBalance: 'Saldo previsto en {years} años', mobileDetails: '{contributed} aportados · {gains} de intereses', settings: 'Configuración de la inversión', investment: 'Tu inversión', reset: 'Restablecer el ejemplo', initial: 'Inversión inicial', rate: 'Tipo de interés anual', compounded: 'Capitalización', compounding: 'Frecuencia de capitalización', period: 'Plazo de inversión', periodYears: 'Plazo de inversión en años', years: 'años', yearSingle: 'Año {year}', yearRange: 'Años {start}–{end}', yearCount: '{count} año', yearsCount: '{count} años',
   daily: 'Diaria', monthly: 'Mensual', weekly: 'Semanal', fortnightly: 'Cada 2 semanas', quarterly: 'Trimestral', halfYearly: 'Semestral', yearly: 'Anual',

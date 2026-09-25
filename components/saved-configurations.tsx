@@ -17,18 +17,18 @@ import { usePreferences, type SaveResult } from '@/lib/store';
 
 const saveErrors: Record<Exclude<SaveResult,'saved'>,MessageKey> = {
   invalidName:'configurationNameError', invalidConfiguration:'saveInvalid', duplicate:'configurationDuplicate',
-  limit:'configurationLimit', storageError:'configurationStorageError', missing:'configurationUnavailable',
+  limit:'configurationLimit', storageError:'configurationStorageError', missing:'configurationUnavailable', conflict:'configurationConflict', unauthorized:'sessionExpired',
 };
 
 export function ConfigurationContext() {
   const state = usePreferences();
   const t = translator(state.language);
-  const active = state.savedConfigs.find(item=>item.id===state.activeConfigId);
+  const active = state.activeSnapshot;
   const modified = !!active && !sameConfiguration(state,active.configuration);
   return <section className="configuration-context" aria-label={t('configurationContext')}>
     {active ? <FilePenLine size={20} aria-hidden="true" /> : <FilePlus2 size={20} aria-hidden="true" />}
     <div className="configuration-identity"><span>{t(active?'editingConfiguration':'newConfiguration')}</span><strong>{active?.name ?? t('untitledConfiguration')}</strong></div>
-    <span role="status" aria-live="polite"><Badge variant={modified?'secondary':'outline'}>{active && (modified?<Pencil />:<Check />)}{t(active ? modified?'unsavedChanges':'saved' : 'notSaved')}</Badge></span>
+    <span role="status" aria-live="polite"><Badge variant={modified?'secondary':'outline'}>{active && (modified?<Pencil />:<Check />)}{t(active ? modified?'unsavedChanges':state.savedConfigs.some(item=>item.id===active.id&&item.revision!==active.revision)?'newerVersion':'saved' : 'notSaved')}</Badge></span>
   </section>;
 }
 
@@ -45,11 +45,13 @@ export function SavedConfigurations() {
   const [deleteId,setDeleteId] = useState<string | null>(null);
   const [pendingAction,setPendingAction] = useState<'new'|'revert'|null>(null);
   const [notice,setNotice] = useState('');
-  const active = state.savedConfigs.find(item => item.id === state.activeConfigId);
+  const active = state.activeSnapshot;
   const unchanged = !!active && sameConfiguration(state,active.configuration);
+  const newer = !!active && state.savedConfigs.some(item=>item.id===active.id && item.revision!==active.revision);
   const dirty = !sameConfiguration(state,active?.configuration ?? defaultPreferences());
   const duplicate = state.savedConfigs.find(item => item.name.toLowerCase() === name.trim().toLowerCase());
   const valid = validConfiguration(state);
+  const busy = !state.ready || state.pending>0;
   const closeButton = <DialogClose asChild><Button variant="ghost" size="icon-sm" className="dialog-close" aria-label={t('close')}><X size={17} /></Button></DialogClose>;
   function restoreFocus(event:Event) {
     event.preventDefault();
@@ -60,21 +62,21 @@ export function SavedConfigurations() {
   function openSave(asCopy = false) {
     setCopyMode(asCopy);setName('');setError(null);setActionError(null);setSaveOpen(true);
   }
-  function save() {
-    const result = state.saveConfiguration(name,copyMode?undefined:duplicate?.id);
+  async function save() {
+    const result = await state.saveConfiguration(name,copyMode?undefined:duplicate?.id);
     if (result !== 'saved') {setError(result==='duplicate'&&copyMode?'configurationCopyDuplicate':saveErrors[result]);return;}
     setSaveOpen(false);setNotice(t('configurationSaved',{name:name.trim()}));
   }
-  function saveChanges() {
+  async function saveChanges() {
     setActionError(null);
-    const result = state.updateActiveConfiguration();
+    const result = await state.updateActiveConfiguration();
     if (result !== 'saved') {setActionError(saveErrors[result]);return;}
     setNotice(t('configurationSaved',{name:active?.name ?? ''}));
   }
-  function runAction(action:'new'|'revert') {
+  async function runAction(action:'new'|'revert') {
     setActionError(null);
     if (action==='new') {state.resetPlan();setNotice(t('newConfiguration'));}
-    else if (active && state.loadConfiguration(active.id)) setNotice(t('configurationReverted',{name:active.name}));
+    else if (active && await state.loadConfiguration(active.id)) setNotice(t('configurationReverted',{name:active.name}));
     else setActionError('configurationUnavailable');
   }
   function requestAction(action:'new'|'revert') {
@@ -84,14 +86,14 @@ export function SavedConfigurations() {
 
   return <div className="configuration-controls" ref={controlsRef}>
     {active ? <ButtonGroup className="configuration-save-group">
-      <Button variant="outline" className="save-configuration" disabled={!valid || unchanged} title={!valid?t('saveInvalid'):active.name} onClick={saveChanges}><Save size={16} />{t('saveChanges')}</Button>
-      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="icon" className="configuration-menu-button" aria-label={t('configurationActions')}><ChevronDown size={16} /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
-        <DropdownMenuItem disabled={!valid} onSelect={()=>openSave(true)}><Copy />{t('saveAsCopy')}</DropdownMenuItem>
-        <DropdownMenuItem disabled={unchanged} onSelect={()=>requestAction('revert')}><RotateCcw />{t('revertConfiguration')}</DropdownMenuItem>
+      <Button variant="outline" className="save-configuration" disabled={busy || !valid || unchanged} title={!valid?t('saveInvalid'):active.name} onClick={saveChanges}><Save size={16} />{t('saveChanges')}</Button>
+      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="icon" className="configuration-menu-button" disabled={busy} aria-label={t('configurationActions')}><ChevronDown size={16} /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
+        <DropdownMenuItem disabled={busy || !valid} onSelect={()=>openSave(true)}><Copy />{t('saveAsCopy')}</DropdownMenuItem>
+        <DropdownMenuItem disabled={busy || unchanged && !newer} onSelect={()=>requestAction('revert')}><RotateCcw />{t('revertConfiguration')}</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={()=>requestAction('new')}><FilePlus2 />{t('newConfiguration')}</DropdownMenuItem>
       </DropdownMenuContent></DropdownMenu>
-    </ButtonGroup> : <Button variant="outline" className="save-configuration" disabled={!valid} title={!valid?t('saveInvalid'):undefined} onClick={()=>openSave()}><Save size={16} />{t('save')}</Button>}
+    </ButtonGroup> : <Button variant="outline" className="save-configuration" disabled={busy || !valid} title={!valid?t('saveInvalid'):undefined} onClick={()=>openSave()}><Save size={16} />{t('save')}</Button>}
     <Dialog open={saveOpen} onOpenChange={open=>{setSaveOpen(open);if(!open)setError(null);}}>
       <DialogContent className="configuration-dialog" showCloseButton={false} onCloseAutoFocus={restoreFocus}>
         {closeButton}
@@ -100,7 +102,7 @@ export function SavedConfigurations() {
           <div className="field"><Label htmlFor="configuration-name">{t('configurationName')}</Label><Input id="configuration-name" value={name} onChange={event=>{setName(event.target.value);setError(null);}} placeholder={t('configurationNamePlaceholder')} maxLength={MAX_NAME_LENGTH} autoComplete="off" autoFocus aria-invalid={error==='configurationNameError'||!!(copyMode&&duplicate)} aria-describedby={error?'configuration-save-error':duplicate?'configuration-replace-note':undefined} /></div>
           {duplicate && <p className="configuration-note" id="configuration-replace-note">{t(copyMode?'configurationCopyDuplicate':'configurationReplaceNote',{name:duplicate.name})}</p>}
           {error && <p className="configuration-error" id="configuration-save-error" role="alert">{t(error)}</p>}
-          <DialogFooter><DialogClose asChild><Button variant="outline" type="button">{t('cancel')}</Button></DialogClose><Button type="submit" disabled={!name.trim()||!valid||!!(copyMode&&duplicate)}><Save size={16} />{t(duplicate&&!copyMode?'replaceConfiguration':'save')}</Button></DialogFooter>
+          <DialogFooter><DialogClose asChild><Button variant="outline" type="button">{t('cancel')}</Button></DialogClose><Button type="submit" disabled={busy || !name.trim()||!valid||!!(copyMode&&duplicate)}><Save size={16} />{t(duplicate&&!copyMode?'replaceConfiguration':'save')}</Button></DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
@@ -115,13 +117,13 @@ export function SavedConfigurations() {
           <div className="saved-configuration-heading"><strong>{item.name}</strong>{active?.id===item.id && <Badge variant="secondary">{t('editing')}</Badge>}</div>
           <p>{t(Number(item.configuration.years)===1?'yearCount':'yearsCount',{count:item.configuration.years})} · {t(item.configuration.phases.length===1?'phaseCount':'phasesCount',{count:item.configuration.phases.length})}</p>
           <small>{t('configurationUpdated',{date:new Intl.DateTimeFormat(locales[state.language],{dateStyle:'medium',timeStyle:'short'}).format(new Date(item.updatedAt))})}</small>
-          {deleteId===item.id ? <div className="configuration-delete"><p>{t('deleteConfigurationQuestion',{name:item.name})}</p><div><Button variant="outline" size="sm" onClick={()=>setDeleteId(null)}>{t('cancel')}</Button><Button variant="destructive" size="sm" onClick={()=>{
-            if(!state.deleteConfiguration(item.id)){setError('configurationStorageError');return;}
+          {deleteId===item.id ? <div className="configuration-delete"><p>{t('deleteConfigurationQuestion',{name:item.name})}</p><div><Button variant="outline" size="sm" onClick={()=>setDeleteId(null)}>{t('cancel')}</Button><Button variant="destructive" size="sm" disabled={busy} onClick={async()=>{
+            if(!await state.deleteConfiguration(item.id)){setError('configurationStorageError');return;}
             setDeleteId(null);setNotice(t('configurationDeleted',{name:item.name}));
             if(state.savedConfigs.length===1)setLoadOpen(false);
           }}>{t('deleteConfiguration')}</Button></div></div> : <div className="saved-configuration-actions">
-            <Button variant="outline" size="sm" disabled={active?.id===item.id&&unchanged} aria-label={t('loadNamedConfiguration',{name:item.name})} onClick={()=>{if(state.loadConfiguration(item.id)){setLoadOpen(false);setNotice(t('configurationLoaded',{name:item.name}));}else setError('configurationUnavailable');}}><FolderOpen size={15} />{t('loadConfiguration')}</Button>
-            <Button variant="ghost" size="icon-sm" aria-label={t('deleteNamedConfiguration',{name:item.name})} title={t('deleteNamedConfiguration',{name:item.name})} onClick={()=>{setDeleteId(item.id);setError(null);}}><Trash2 size={16} /></Button>
+            <Button variant="outline" size="sm" disabled={busy || active?.id===item.id&&unchanged&&active.revision===item.revision} aria-label={t('loadNamedConfiguration',{name:item.name})} onClick={async()=>{if(await state.loadConfiguration(item.id)){setLoadOpen(false);setNotice(t('configurationLoaded',{name:item.name}));}else setError('configurationUnavailable');}}><FolderOpen size={15} />{t('loadConfiguration')}</Button>
+            <Button variant="ghost" size="icon-sm" disabled={busy} aria-label={t('deleteNamedConfiguration',{name:item.name})} title={t('deleteNamedConfiguration',{name:item.name})} onClick={()=>{setDeleteId(item.id);setError(null);}}><Trash2 size={16} /></Button>
           </div>}
         </li>)}</ul>
       </DialogContent>
