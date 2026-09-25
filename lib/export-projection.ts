@@ -1,3 +1,4 @@
+import { APP_NAME, APP_SLUG } from './brand.ts';
 import type { Preferences } from './preferences.ts';
 import type { ProjectionRow } from './compound.ts';
 import { locales, translator, type MessageKey } from './i18n.ts';
@@ -40,8 +41,9 @@ function formatters(snapshot:ExportSnapshot) {
   return {t,number,money,years};
 }
 export function exportFilename(snapshot:ExportSnapshot,extension:'png'|'pdf') {
-  const base=snapshot.name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60)||translator(snapshot.language)('exportFile');
-  return `${base}-${snapshot.currency}.${extension}`;
+  const base=snapshot.name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60);
+  const filename=base?`${APP_SLUG}-${base}`:translator(snapshot.language)('exportFile');
+  return `${filename}-${snapshot.currency}.${extension}`;
 }
 function drawChart(s:Scene,ctx:CanvasRenderingContext2D,snapshot:ExportSnapshot,x:number,y:number,width:number,height:number,visible:Preferences['visible']) {
   const {t,money,number}=formatters(snapshot);const enabled=series.filter(item=>visible[item.key]);
@@ -69,7 +71,7 @@ function drawChart(s:Scene,ctx:CanvasRenderingContext2D,snapshot:ExportSnapshot,
 export function createChartScene(snapshot:ExportSnapshot,createCanvas:CanvasFactory=browserCanvas):Scene {
   const s:Scene={width:1400,height:860,commands:[]},ctx=createCanvas(1,1).getContext('2d')!;
   const {t,years}=formatters(snapshot);rect(s,0,0,s.width,s.height,'#ffffff');
-  text(s,'compound',60,57,24,true);text(s,t('chartTitle'),60,118,36,true);
+  text(s,APP_NAME,60,57,24,true);text(s,t('chartTitle'),60,118,36,true);
   const next=paragraph(s,ctx,snapshot.name,60,155,1280,20);
   text(s,`${years(Number(snapshot.years))} · ${snapshot.currency}`,60,next+12,18,false,muted);
   drawChart(s,ctx,snapshot,60,next+49,1280,535-(next-184),snapshot.visible);
@@ -79,7 +81,7 @@ export function createChartScene(snapshot:ExportSnapshot,createCanvas:CanvasFact
 export function createReportScenes(snapshot:ExportSnapshot,createCanvas:CanvasFactory=browserCanvas):Scene[] {
   const width=1200,height=1697,margin=72,content=width-2*margin,ctx=createCanvas(1,1).getContext('2d')!;
   const {t,money,number,years}=formatters(snapshot);const pages:Scene[]=[];
-  const newPage=()=>{const s:Scene={width,height,commands:[]};rect(s,0,0,width,height,'#ffffff');text(s,'compound',margin,65,25,true);text(s,t('reportTitle'),margin,105,18,false,muted);line(s,margin,132,width-margin,132);pages.push(s);return s;};
+  const newPage=()=>{const s:Scene={width,height,commands:[]};rect(s,0,0,width,height,'#ffffff');text(s,APP_NAME,margin,65,25,true);text(s,t('reportTitle'),margin,105,18,false,muted);line(s,margin,132,width-margin,132);pages.push(s);return s;};
   let page=newPage(),y=192;
   y=paragraph(page,ctx,snapshot.name,margin,y,content,42,ink,true)+10;
   const date=new Intl.DateTimeFormat(locales[snapshot.language],{dateStyle:'long'}).format(snapshot.createdAt);
@@ -130,7 +132,7 @@ export function renderScene(scene:Scene,scale=2,createCanvas:CanvasFactory=brows
 }
 export async function renderPdf(snapshot:ExportSnapshot,createCanvas:CanvasFactory=browserCanvas) {
   const {PDFDocument,StandardFonts,rgb}=await import('pdf-lib');
-  const pdf=await PDFDocument.create();pdf.setTitle(`${snapshot.name} - ${translator(snapshot.language)('reportTitle')}`);pdf.setAuthor('compound');pdf.setSubject(translator(snapshot.language)('projection'));pdf.setCreationDate(snapshot.createdAt);
+  const pdf=await PDFDocument.create();pdf.setTitle(`${APP_NAME} - ${snapshot.name} - ${translator(snapshot.language)('reportTitle')}`);pdf.setAuthor(APP_NAME);pdf.setSubject(translator(snapshot.language)('projection'));pdf.setCreationDate(snapshot.createdAt);
   const regular=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
   const color=(hex:string)=>rgb(parseInt(hex.slice(1,3),16)/255,parseInt(hex.slice(3,5),16)/255,parseInt(hex.slice(5,7),16)/255);
   for(const scene of createReportScenes(snapshot,createCanvas)){

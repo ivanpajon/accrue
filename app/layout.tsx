@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./preferences.css";
+import { APP_NAME } from "@/lib/brand";
+import { translator } from "@/lib/i18n";
 import { preferenceBootstrap } from "@/lib/preferences";
 
 export const metadata: Metadata = {
-  title: "Compound — Compound interest calculator",
+  title: translator("en")("title"),
+  applicationName: APP_NAME,
   description: "Explore investment growth with flexible contribution phases, interactive charts, and a year-by-year projection.",
   other: {
     "codex-preview": "development",

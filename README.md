@@ -1,6 +1,6 @@
-# Compound
+# Accrue
 
-A responsive compound-interest calculator built with React 19, TypeScript, shadcn/ui, and Recharts. The application uses the Vinext/Vite React framework.
+Accrue is a responsive compound-interest calculator built with React 19, TypeScript, shadcn/ui, and Recharts. The application uses the Vinext/Vite React framework.
 
 ## Run locally
 
@@ -31,15 +31,15 @@ The calculation tests run directly with Node.js 22.18+ or 24+.
 - Weekly, every-two-weeks, monthly, quarterly, half-yearly, or yearly deposits.
 - Beginning- or end-of-period deposits, zero-contribution pauses, and negative-rate scenarios.
 - Interactive chart with total balance, contributions, and interest; composition chart; contribution timeline.
-- Annual table with exact cents and CSV export.
+- Annual table with exact cents, high-resolution PNG chart downloads, and PDF reports with the complete configuration, chart, contribution phases, and yearly results.
 - USD and EUR formatting (no exchange-rate conversion).
-- English and Spanish translations, including number formatting, charts, help, accessibility labels, and CSV exports. English is the default.
+- English and Spanish translations, including number formatting, charts, help, accessibility labels, and image/PDF exports. English is the default.
 - Default shadcn neutral theme in light and dark mode, with shared color/radius tokens and the standard shadcn chart palette. System appearance is the default and follows live OS changes.
 - Named investment configurations: Save the current investment and contribution plan, load one from the folder button beside Save, explicitly replace an existing name, or delete a saved configuration.
 - A persistent context strip identifies the active saved configuration and whether it has unsaved changes. Save changes updates it directly; the adjacent menu offers Save as copy, Revert to saved, and New configuration. Reverting or starting over asks before discarding edits, and the example reset is hidden while editing a saved configuration.
 - Zustand automatically persists language, currency, theme, and chart preferences. Calculator drafts persist only when explicitly saved.
 - Compact icon-only language, appearance, and currency menus in the header; Save and saved configurations beside the page title.
-- Joined annual-rate/compounding and contribution amount/frequency controls and accessible year-range sliders, with an exact-year popover for precise editing. Phase dates remain intact when the investment horizon changes.
+- Joined annual-rate/compounding and contribution amount/frequency controls and accessible year-range sliders, with an exact-year popover for precise editing. Phase dates and slider bounds adjust together when the investment horizon is shortened. Typed period edits commit on blur or Enter.
 - Exact-year edits automatically round and fit within the current investment period on blur or Apply. Editing an endpoint past the other moves both to the same year. Cancel discards the draft; opening the editor does not change existing phases.
 - Lucide icons throughout.
 - Accessible shadcn controls, validation, and responsive layout.
@@ -48,15 +48,17 @@ The calculation tests run directly with Node.js 22.18+ or 24+.
 
 The input interest rate is nominal annual interest. For m compounding periods per year, each cash flow grows by `(1 + annualRate / m) ^ (m * elapsedYears)` until the next event. Fractional periods use this equivalent rate. This interpolates growth between compounding dates; it does not simulate a bank's particular interest posting rules.
 
-A financial year contains 12 months, 52 weeks, or 26 two-week periods. Deposits recur from each phase's start. End-of-period deposits fall on period ends; beginning-of-period deposits fall on period starts. Beginning deposits on annual boundaries belong to the following year's table row. Deposits beyond the horizon are excluded. Calculations keep full floating-point precision and round only for display and CSV output.
+A financial year contains 12 months, 52 weeks, or 26 two-week periods. Deposits recur from each phase's start. End-of-period deposits fall on period ends; beginning-of-period deposits fall on period starts. Beginning deposits on annual boundaries belong to the following year's table row. Deposits beyond the horizon are excluded. Calculations keep full floating-point precision and round only for display and exported reports.
 
-Returns are constant hypothetical assumptions. Taxes, fees, inflation, and variable returns are not modeled. Named configurations and preferences are stored only in this browser's localStorage under `compound-planner-v1` (schema version 2); they are not sent to a server or synced across devices. Reload starts with the example draft; choose a saved configuration to load it. Unsaved edits do not change saved snapshots. Language, currency, and appearance are independent preferences and remain unchanged when loading a plan. Reset restores the example plan while keeping saved configurations and preferences. A customized legacy autosave is migrated once into “Previous configuration” / “Configuración anterior.” The calculator remains usable when storage is unavailable, and explicit saves report storage failures.
+Returns are constant hypothetical assumptions. Taxes, fees, inflation, and variable returns are not modeled. Named configurations and preferences are stored only in this browser's localStorage under the legacy key `compound-planner-v1` (schema version 2, retained for compatibility with plans saved before the Accrue rename); they are not sent to a server or synced across devices. Reload starts with the example draft; choose a saved configuration to load it. Unsaved edits do not change saved snapshots. Language, currency, and appearance are independent preferences and remain unchanged when loading a plan. Reset restores the example plan while keeping saved configurations and preferences. A customized legacy autosave is migrated once into “Previous configuration” / “Configuración anterior.” The calculator remains usable when storage is unavailable, and explicit saves report storage failures.
 
 ## Main files
 
 - `app/page.tsx`: calculator interface.
 - `app/globals.css` and `app/preferences.css`: responsive styling and theme tokens.
+- `lib/brand.ts`: shared Accrue name and filename prefix.
 - `lib/i18n.ts`: typed English and Spanish dictionaries.
+- `components/projection-exports.tsx` and `lib/export-projection.ts`: image downloads and paginated PDF reports.
 - `components/saved-configurations.tsx`: Save dialog and saved configuration picker.
 - `lib/store.ts`, `lib/configurations.ts`, and `lib/preferences.ts`: draft state, saved snapshots, storage migration, validation, and theme initialization before paint.
 - `lib/compound.ts`: independent cash-flow calculation engine.

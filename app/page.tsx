@@ -19,6 +19,7 @@ import { locales, translator, type MessageKey } from '@/lib/i18n';
 import { usePreferences } from '@/lib/store';
 import { ConfigurationContext, SavedConfigurations } from '@/components/saved-configurations';
 import { ContributionPhase } from '@/components/contribution-phase';
+import { APP_NAME } from '@/lib/brand';
 import { ProjectionExports } from '@/components/projection-exports';
 import { STORAGE_KEY, type Preferences } from '@/lib/preferences';
 
@@ -102,7 +103,7 @@ export default function Home() {
   };
   return <TooltipProvider delayDuration={250}><div className="app-shell">
     <header className="topbar"><div className="topbar-inner">
-      <div className="brand"><span className="brand-icon"><ChartNoAxesCombined size={21} strokeWidth={2.3} /></span>compound</div>
+      <div className="brand"><span className="brand-icon"><ChartNoAxesCombined size={21} strokeWidth={2.3} /></span>{APP_NAME}</div>
       <div className="preferences-controls">
         <Choice iconOnly icon={<Languages size={18} />} label={t('language')} value={language} onChange={value => update({ language: value as Preferences['language'] })} options={[{ value: 'en', label: 'English' }, { value: 'es', label: 'Español' }]} />
         <Choice iconOnly icon={theme === 'system' ? <Monitor size={18} /> : theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />} label={t('theme')} value={theme} onChange={value => update({ theme: value as Preferences['theme'] })} options={(['system','light','dark'] as const).map(value => ({ value, label: t(value) }))} />
@@ -150,7 +151,7 @@ export default function Home() {
           </section>
           <p className="projection-note"><Info size={15} /><span>{t('note')}</span></p>
         </>}
-      </section></div><footer><span className="footer-brand">compound.</span><span>{t('footer')}</span><span className="footer-right">{t('footerRight')}</span></footer>
+      </section></div><footer><span className="footer-brand">{APP_NAME}</span><span>{t('footer')}</span><span className="footer-right">{t('footerRight')}</span></footer>
     </main>
   </div></TooltipProvider>;
 }

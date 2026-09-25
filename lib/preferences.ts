@@ -7,6 +7,7 @@ export type Preferences = {
   timing: 'end' | 'beginning'; view: 'growth' | 'table';
   visible: { total: boolean; contributed: boolean; gains: boolean };
 };
+// Keep the original storage key so renaming the app does not strand existing saved plans.
 export const STORAGE_KEY = 'compound-planner-v1';
 export function defaultPreferences(): Preferences {
   return { language: 'en', theme: 'system', currency: 'USD', initial: '10000', rate: '7', compounds: '1', years: '10', phases: defaultPhases.map(p => ({ ...p })), timing: 'end', view: 'growth', visible: { total: true, contributed: true, gains: true } };
