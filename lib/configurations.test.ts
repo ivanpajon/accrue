@@ -11,6 +11,58 @@ function memoryStorage() {
 }
 const customPlan = {initial:'25000',rate:'5',compounds:'4',years:'20',timing:'beginning' as const,phases:[{id:'custom',amount:'350',frequency:'12',startYear:'3',endYear:'8'}]};
 
+test('shortening the investment period updates phase dates atomically without changing saved plans', () => {
+  const storage=memoryStorage();const store=createPreferencesStore(()=>storage);
+  store.getState().saveConfiguration('Original');
+  const original=store.getState().savedConfigs[0];
+  const observed: {years:string;endYear:string}[]=[];
+  const unsubscribe=store.subscribe(state=>observed.push({years:state.years,endYear:state.phases[2].endYear}));
+  store.getState().update({years:'7'});unsubscribe();
+  assert.deepEqual(observed,[{years:'7',endYear:'7'}]);
+  assert.deepEqual(store.getState().phases.map(p=>[p.startYear,p.endYear]),[['1','3'],['4','5'],['6','7']]);
+  assert.deepEqual(store.getState().phases.map(({startYear,endYear,...rest})=>rest),original.configuration.phases.map(({startYear,endYear,...rest})=>rest));
+  assert.equal(original.configuration.phases[2].endYear,'10');
+  assert.equal(sameConfiguration(store.getState(),original.configuration),false);
+  store.getState().update({years:'10'});
+  assert.equal(store.getState().phases[2].endYear,'7');
+  store.getState().loadConfiguration(original.id);
+  assert.equal(store.getState().phases[2].endYear,'10');
+});
+
+test('one-year plans and added phases stay inside the period while invalid period drafts leave dates intact', () => {
+  const store=createPreferencesStore(()=>memoryStorage());
+  const original=store.getState().phases;
+  for(const years of ['', '0', '2.5', '51']) {
+    store.getState().update({years});
+    assert.deepEqual(store.getState().phases,original);
+  }
+  store.getState().update({years:'1'});
+  assert.ok(store.getState().phases.every(p=>p.startYear==='1'&&p.endYear==='1'));
+  store.getState().update(state=>({phases:[...state.phases,{id:'later',amount:'75',frequency:'4',startYear:'2',endYear:'4'}]}));
+  assert.deepEqual(store.getState().phases.at(-1),{id:'later',amount:'75',frequency:'4',startYear:'1',endYear:'1'});
+});
+
+test('period drag previews use their original phase dates until the gesture finishes', () => {
+  const store=createPreferencesStore(()=>memoryStorage());
+  const original=store.getState().phases;
+  store.getState().update({years:'2',phases:original});
+  store.getState().update({years:'7',phases:original});
+  assert.deepEqual(store.getState().phases.map(p=>[p.startYear,p.endYear]),[['1','3'],['4','5'],['6','7']]);
+  assert.equal(original[2].endYear,'10');
+});
+
+test('loading an older plan clips its working dates but keeps the saved snapshot available', () => {
+  const storage=memoryStorage();
+  const original=snapshotConfiguration({...defaultPreferences(),years:'7'});
+  storage.setItem(STORAGE_KEY,JSON.stringify({version:2,state:{savedConfigs:[{id:'old',name:'Older plan',updatedAt:'2026-09-25T00:00:00Z',configuration:original}]}}));
+  const store=createPreferencesStore(()=>storage);
+  assert.equal(store.getState().loadConfiguration('old'),true);
+  assert.equal(store.getState().phases[2].endYear,'7');
+  assert.equal(store.getState().savedConfigs[0].configuration.phases[2].endYear,'10');
+  assert.equal(store.getState().updateActiveConfiguration(),'saved');
+  assert.equal(store.getState().savedConfigs[0].configuration.phases[2].endYear,'7');
+});
+
 test('only named snapshots survive reload; draft inputs never enter the persisted root', async () => {
   const storage=memoryStorage(); const store=createPreferencesStore(() => storage);
   store.getState().update({...customPlan,language:'es',theme:'dark',currency:'EUR'});

@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist, type PersistStorage } from 'zustand/middleware';
 import { defaultPreferences, STORAGE_KEY, type Preferences } from './preferences.ts';
+import { fitPhasesToHorizon } from './phase-range.ts';
 import { MAX_CONFIGURATIONS, MAX_NAME_LENGTH, persistedPreferences, readStoredPreferences, snapshotConfiguration, validConfiguration, type PersistedPreferences, type SavedConfiguration } from './configurations.ts';
 
 export type SaveResult = 'saved' | 'invalidName' | 'invalidConfiguration' | 'duplicate' | 'limit' | 'storageError' | 'missing';
@@ -48,7 +49,11 @@ export function createPreferencesStore(getStorage: () => BrowserStorage | undefi
   };
   return create<Store>()(persist<Store, [], [], PersistedPreferences>((set,get) => ({
     ...defaultPreferences(), savedConfigs:[], activeConfigId:null,
-    update: patch => set(state => typeof patch === 'function' ? patch(state) : patch),
+    update: patch => set(state => {
+      const changes = typeof patch === 'function' ? patch(state) : patch;
+      if (changes.years === undefined && changes.phases === undefined) return changes;
+      return {...changes,phases:fitPhasesToHorizon(changes.phases ?? state.phases,Number(changes.years ?? state.years))};
+    }),
     resetPlan: () => set({...snapshotConfiguration(defaultPreferences()),activeConfigId:null}),
     saveConfiguration: (input,replaceId) => {
       const name = input.trim();
@@ -87,7 +92,8 @@ export function createPreferencesStore(getStorage: () => BrowserStorage | undefi
       try { library = latest()?.savedConfigs ?? []; } catch { return false; }
       const item = library.find(saved => saved.id === id);
       if (!item) return false;
-      set({...snapshotConfiguration(item.configuration),savedConfigs:library,activeConfigId:id});
+      const configuration = snapshotConfiguration(item.configuration);
+      set({...configuration,phases:fitPhasesToHorizon(configuration.phases,Number(configuration.years)),savedConfigs:library,activeConfigId:id});
       return true;
     },
     deleteConfiguration: id => {

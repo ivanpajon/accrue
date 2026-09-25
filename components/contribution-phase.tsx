@@ -33,12 +33,8 @@ export function ContributionPhase({phase,index,years,symbol,language,onChange,on
   const dateValid = (start:string,end:string) => Number.isInteger(Number(start)) && Number(start) >= 1 && Number(start) <= 50 && Number.isInteger(Number(end)) && Number(end) >= Number(start) && Number(end) <= 50;
   const datesValid = dateValid(phase.startYear,phase.endYear);
   const amountValid = phase.amount.trim() !== '' && Number.isFinite(Number(phase.amount)) && Number(phase.amount) >= 0 && Number(phase.amount) <= 1e9;
-  const start = Math.min(50,Math.max(1,Math.round(Number(phase.startYear)||1)));
-  const end = Math.max(start,Math.min(50,Math.max(1,Math.round(Number(phase.endYear)||start))));
-  // Keep stored dates visible, and freeze the scale only while a thumb is being dragged.
-  const requiredMax = Math.max(2,end,horizon);
-  const [dragMax,setDragMax] = useState<number | null>(null);
-  const max = Math.max(dragMax ?? 0,requiredMax);
+  const start = Math.min(horizon,Math.max(1,Math.round(Number(phase.startYear)||1)));
+  const end = Math.max(start,Math.min(horizon,Math.max(1,Math.round(Number(phase.endYear)||start))));
   const range = datesValid ? start === end ? t('yearSingle',{year:n(start)}) : t('yearRange',{start:n(start),end:n(end)}) : t('chooseYears');
   const count = end-start+1;
 
@@ -62,7 +58,7 @@ export function ContributionPhase({phase,index,years,symbol,language,onChange,on
       </Popover>
       {datesValid && <span className="phase-length">{t(count===1?'yearCount':'yearsCount',{count:n(count)})}</span>}
     </div>
-    <fieldset className="phase-range-slider"><legend className="sr-only">{t('phaseRange',{number:index+1})}</legend><Slider min={1} max={max} step={1} minStepsBetweenThumbs={0} value={[start,end]} onPointerDownCapture={event=>{if(event.button===0)setDragMax(requiredMax);}} onPointerUp={()=>setDragMax(null)} onPointerCancel={()=>setDragMax(null)} onLostPointerCapture={()=>setDragMax(null)} onValueChange={values=>onChange({startYear:String(values[0]),endYear:String(values[1])})} thumbLabels={[t('phaseStart',{number:index+1}),t('phaseEnd',{number:index+1})]} thumbValueTexts={[t('yearSingle',{year:n(start)}),t('yearSingle',{year:n(end)})]} /><div className="phase-range-axis" aria-hidden="true"><span>{t('yearSingle',{year:1})}</span><span>{t('yearSingle',{year:n(max)})}</span></div></fieldset>
+    <fieldset className="phase-range-slider"><legend className="sr-only">{t('phaseRange',{number:index+1})}</legend>{horizon===1 ? <div className="phase-range-fixed"><span className="sr-only">{t('yearSingle',{year:1})}</span></div> : <Slider min={1} max={horizon} step={1} minStepsBetweenThumbs={0} value={[start,end]} onValueChange={values=>onChange({startYear:String(values[0]),endYear:String(values[1])})} thumbLabels={[t('phaseStart',{number:index+1}),t('phaseEnd',{number:index+1})]} thumbValueTexts={[t('yearSingle',{year:n(start)}),t('yearSingle',{year:n(end)})]} />}<div className="phase-range-axis" aria-hidden="true"><span>{t('yearSingle',{year:1})}</span>{horizon>1 && <span>{t('yearSingle',{year:n(horizon)})}</span>}</div></fieldset>
     {!validPhase(phase) ? <p className="phase-error">{t(amountValid?'phaseError':'phaseAmountError')}</p> : start > years ? <p className="phase-status">{t('outside')}</p> : null}
   </article>;
 }

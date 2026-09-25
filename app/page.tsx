@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ChartNoAxesCombined, CircleHelp, DollarSign, Download, Euro, Info, Layers3, Languages, Monitor, Moon, Sun, Plus, RotateCcw, TrendingUp, Wallet, X } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as ChartTooltip, XAxis, YAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -26,14 +26,24 @@ function Choice({ value, onChange, options, label, id, icon, iconOnly = false, c
   const trigger = <SelectTrigger id={id} aria-label={label} showChevron={!iconOnly} className={`${iconOnly?'icon-choice':'choice'} ${className}`}>{icon}{iconOnly ? <span className="sr-only"><SelectValue /></span> : <SelectValue />}</SelectTrigger>;
   return <Select value={value} onValueChange={onChange}>{iconOnly ? <Tooltip><TooltipTrigger asChild>{trigger}</TooltipTrigger><TooltipContent sideOffset={8}>{label}: {options.find(option=>option.value===value)?.label}</TooltipContent></Tooltip> : trigger}<SelectContent position="popper" align={iconOnly?'end':'center'}><SelectGroup>{iconOnly && <SelectLabel>{label}</SelectLabel>}{options.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectGroup></SelectContent></Select>;
 }
-function NumberField({ id, label, accessibleLabel, value, onChange, prefix, suffix, min = 0, max = 1e9, step = 'any' }: { id: string; label: string; accessibleLabel?: string; value: string; onChange: (value: string) => void; prefix?: string; suffix?: string; min?: number; max?: number; step?: string }) {
-  const invalid = value.trim() === '' || !Number.isFinite(Number(value)) || Number(value) < min || Number(value) > max || (step === '1' && !Number.isInteger(Number(value)));
-  return <div className="field"><Label htmlFor={id}>{label}</Label><div className={`number-wrap ${invalid ? 'invalid' : ''}`}>{prefix && <span className="prefix">{prefix}</span>}<Input id={id} type="number" inputMode={step === '1' ? 'numeric' : 'decimal'} aria-label={accessibleLabel} value={value} min={min} max={max} step={step} onChange={event => onChange(event.target.value)} aria-invalid={invalid} className={prefix ? 'with-prefix' : ''} />{suffix && <span className="suffix">{suffix}</span>}</div></div>;
+function NumberField({ id, label, accessibleLabel, value, onChange, prefix, suffix, min = 0, max = 1e9, step = 'any', commitOnBlur = false }: { id: string; label: string; accessibleLabel?: string; value: string; onChange: (value: string) => void; prefix?: string; suffix?: string; min?: number; max?: number; step?: string; commitOnBlur?: boolean }) {
+  const [draft,setDraft] = useState<string | null>(null);
+  const inputValue = commitOnBlur ? draft ?? value : value;
+  const invalid = inputValue.trim() === '' || !Number.isFinite(Number(inputValue)) || Number(inputValue) < min || Number(inputValue) > max || (step === '1' && !Number.isInteger(Number(inputValue)));
+  return <div className="field"><Label htmlFor={id}>{label}</Label><div className={`number-wrap ${invalid ? 'invalid' : ''}`}>{prefix && <span className="prefix">{prefix}</span>}<Input id={id} type="number" inputMode={step === '1' ? 'numeric' : 'decimal'} aria-label={accessibleLabel} value={inputValue} min={min} max={max} step={step} onChange={event => commitOnBlur ? setDraft(event.target.value) : onChange(event.target.value)} onBlur={()=>{if(commitOnBlur && draft!==null){onChange(draft);setDraft(null);}}} onKeyDown={event=>{if(commitOnBlur && event.key==='Enter')event.currentTarget.blur();}} aria-invalid={invalid} className={prefix ? 'with-prefix' : ''} />{suffix && <span className="suffix">{suffix}</span>}</div></div>;
 }
 
 export default function Home() {
   const { initial, rate, compounds, years, phases, currency, timing, view, visible, language, theme, update, resetPlan, activeConfigId, savedConfigs } = usePreferences();
   const editingConfiguration = savedConfigs.some(item=>item.id===activeConfigId);
+  // Every preview in one drag starts from the original phases, not the last clipped preview.
+  const periodDrag = useRef<{phases:Phase[] | null} | null>(null);
+  const changePeriodFromSlider = (value:number[]) => {
+    const currentPhases = usePreferences.getState().phases;
+    // Radix focuses the thumb before this callback, committing any pending number-field edit.
+    if (periodDrag.current && !periodDrag.current.phases) periodDrag.current.phases = currentPhases;
+    update({years:String(value[0]),phases:periodDrag.current?.phases ?? currentPhases});
+  };
   const t = useMemo(() => translator(language), [language]);
   const locale = locales[language];
   useEffect(() => {
@@ -118,8 +128,8 @@ export default function Home() {
               <Choice id="compounding" className="compounding-choice" label={t('compounding')} value={compounds} onChange={compounds => update({ compounds })} options={([['365','daily'],['12','monthly'],['4','quarterly'],['2','halfYearly'],['1','yearly']] as const).map(([value,key]) => ({ value, label:t(key) }))} />
             </ButtonGroup>
           </div>
-          <NumberField id="years" label={t('period')} value={years} onChange={years => update({ years })} suffix={t('years')} min={1} max={50} step="1" />
-          <fieldset className="years-slider"><legend className="sr-only">{t('periodYears')}</legend><Slider min={1} max={50} step={1} thumbLabels={[t('periodYears')]} thumbValueTexts={[duration(Number(years)||1)]} value={[Math.min(50, Math.max(1, Number(years) || 1))]} onValueChange={value => update({ years: String(value[0]) })} /><div className="slider-labels"><span>{duration(1)}</span><span>{duration(50)}</span></div></fieldset>
+          <NumberField id="years" label={t('period')} value={years} onChange={years => update({ years })} suffix={t('years')} min={1} max={50} step="1" commitOnBlur />
+          <fieldset className="years-slider"><legend className="sr-only">{t('periodYears')}</legend><Slider min={1} max={50} step={1} thumbLabels={[t('periodYears')]} thumbValueTexts={[duration(Number(years)||1)]} value={[Math.min(50, Math.max(1, Number(years) || 1))]} onPointerDownCapture={event=>{if(event.button===0)periodDrag.current={phases:null};}} onPointerUp={()=>{periodDrag.current=null;}} onPointerCancel={()=>{periodDrag.current=null;}} onLostPointerCapture={()=>{periodDrag.current=null;}} onValueChange={changePeriodFromSlider} /><div className="slider-labels"><span>{duration(1)}</span><span>{duration(50)}</span></div></fieldset>
         </div></section>
         <section className="panel contribution-panel"><div className="section-heading"><h2><Layers3 size={18} />{t('plan')}</h2><span className="small-badge">{t(phases.length === 1 ? 'phaseCount' : 'phasesCount', { count: number(phases.length) })}</span></div><p className="panel-intro">{t('planIntro')}</p>
           <div className="phases">{phases.map((phase,index)=><ContributionPhase key={phase.id} phase={phase} index={index} years={Number(years)||0} symbol={symbol} language={language} onChange={patch=>setPhase(phase.id,patch)} onRemove={()=>update(state=>({phases:state.phases.filter(p=>p.id!==phase.id)}))} />)}</div>
