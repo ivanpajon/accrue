@@ -5,6 +5,8 @@ const en = {
   editPhaseRange: "Edit phase {number} years: {range}",
   phaseRange: "Phase {number} year range",
   applyRange: "Apply",
+  phaseRangeHint: "Whole years from 1 to {max}, within your investment period.",
+  phaseRangeAutoAdjust: "Both years are included. Values adjust automatically when you leave a field.",
   phaseAmountError: "Enter an amount from 0 to 1 billion.",
 
   save: "Save",
@@ -61,6 +63,8 @@ const es: Record<MessageKey, string> = {
   editPhaseRange: "Editar años de la fase {number}: {range}",
   phaseRange: "Intervalo de años de la fase {number}",
   applyRange: "Aplicar",
+  phaseRangeHint: "Años enteros del 1 al {max}, dentro del plazo de inversión.",
+  phaseRangeAutoAdjust: "Ambos años están incluidos. Los valores se ajustan al salir del campo.",
   phaseAmountError: "Introduce un importe de 0 a mil millones.",
 
   save: "Guardar",

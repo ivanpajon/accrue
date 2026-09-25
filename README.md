@@ -18,7 +18,7 @@ Open the localhost URL printed by the development server (normally http://localh
 ```sh
 npm run build
 npx tsc --noEmit
-node --test lib/compound.test.ts lib/preferences.test.ts lib/configurations.test.ts
+node --test lib/compound.test.ts lib/preferences.test.ts lib/configurations.test.ts lib/phase-range.test.ts
 ```
 
 The calculation tests run directly with Node.js 22.18+ or 24+.
@@ -39,6 +39,7 @@ The calculation tests run directly with Node.js 22.18+ or 24+.
 - Zustand automatically persists language, currency, theme, and chart preferences. Calculator drafts persist only when explicitly saved.
 - Compact icon-only language, appearance, and currency menus in the header; Save and saved configurations beside the page title.
 - Joined annual-rate/compounding and contribution amount/frequency controls and accessible year-range sliders, with an exact-year popover for precise editing. Phase dates remain intact when the investment horizon changes.
+- Exact-year edits automatically round and fit within the current investment period on blur or Apply. Editing an endpoint past the other moves both to the same year. Cancel discards the draft; opening the editor does not change existing phases.
 - Lucide icons throughout.
 - Accessible shadcn controls, validation, and responsive layout.
 

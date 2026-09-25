@@ -365,9 +365,10 @@ footer{flex-wrap:wrap;gap:10px}
 }
 
 
-.interest-labels{display:grid;grid-template-columns:1fr 1.05fr;gap:12px;align-items:end}
+.interest-labels{display:grid;grid-template-columns:minmax(0,1fr) 7.25rem;align-items:end}
 .interest-labels label{line-height:1.25}
+.interest-labels label:last-child{padding-left:12px}
 .interest-controls{display:flex;width:100%;min-width:0}
 .interest-rate-input{flex:1;min-width:0}
-.interest-controls>.compounding-choice{flex:1.05;width:0;min-width:0}
+.interest-controls>.compounding-choice{flex:0 0 7.25rem;width:7.25rem;min-width:0;padding-inline:10px}
 .interest-controls>.interest-rate-input:focus-within{position:relative;z-index:1}

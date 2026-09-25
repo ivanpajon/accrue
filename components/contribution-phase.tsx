@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CalendarRange, ChevronDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { validPhase, type Phase } from '@/lib/compound';
 import { locales, translator, type Language, type MessageKey } from '@/lib/i18n';
+import { investmentHorizon, normalizeYearRange, type YearEndpoint, type YearRange } from '@/lib/phase-range';
 
 const recurrenceKeys = [['12','monthly'],['52','weekly'],['26','fortnightly'],['4','quarterly'],['2','halfYearly'],['1','yearly']] as const;
 const perPeriod: Record<string,MessageKey> = {'12':'perMonth','52':'perWeek','26':'perFortnight','4':'perQuarter','2':'perHalfYear','1':'perYear'};
@@ -21,8 +22,14 @@ export function ContributionPhase({phase,index,years,symbol,language,onChange,on
   const t = translator(language);
   const n = (value:number) => new Intl.NumberFormat(locales[language]).format(value);
   const [open,setOpen] = useState(false);
-  const [startDraft,setStartDraft] = useState(phase.startYear);
-  const [endDraft,setEndDraft] = useState(phase.endYear);
+  const [draft,setDraft] = useState<YearRange>({startYear:phase.startYear,endYear:phase.endYear});
+  const editedEndpoint = useRef<YearEndpoint>('startYear');
+  const horizon = investmentHorizon(years);
+  const editYear = (endpoint:YearEndpoint,value:string) => {
+    editedEndpoint.current = endpoint;
+    setDraft(previous=>({...previous,[endpoint]:value}));
+  };
+  const finishYear = (endpoint:YearEndpoint) => setDraft(previous=>normalizeYearRange(previous,horizon,endpoint,phase));
   const dateValid = (start:string,end:string) => Number.isInteger(Number(start)) && Number(start) >= 1 && Number(start) <= 50 && Number.isInteger(Number(end)) && Number(end) >= Number(start) && Number(end) <= 50;
   const datesValid = dateValid(phase.startYear,phase.endYear);
   const amountValid = phase.amount.trim() !== '' && Number.isFinite(Number(phase.amount)) && Number(phase.amount) >= 0 && Number(phase.amount) <= 1e9;
@@ -34,7 +41,6 @@ export function ContributionPhase({phase,index,years,symbol,language,onChange,on
   const max = Math.max(scaleMax,requiredMax);
   useEffect(()=>setScaleMax(previous=>Math.max(previous,requiredMax)),[requiredMax]);
   const range = datesValid ? start === end ? t('yearSingle',{year:n(start)}) : t('yearRange',{start:n(start),end:n(end)}) : t('chooseYears');
-  const draftValid = dateValid(startDraft,endDraft);
   const count = end-start+1;
 
   return <article className="contribution-phase" aria-label={t('phaseName',{number:index+1})}>
@@ -44,14 +50,14 @@ export function ContributionPhase({phase,index,years,symbol,language,onChange,on
       <Select value={phase.frequency} onValueChange={frequency=>onChange({frequency})}><SelectTrigger className="contribution-recurrence" aria-label={t('phaseRecurrence',{number:index+1})}><SelectValue>{t(perPeriod[phase.frequency])}</SelectValue></SelectTrigger><SelectContent position="popper" align="end">{recurrenceKeys.map(([value,key])=><SelectItem key={value} value={value}>{t(key)}</SelectItem>)}</SelectContent></Select>
     </div>
     <div className="phase-range-heading">
-      <Popover open={open} onOpenChange={next=>{setOpen(next);if(next){setStartDraft(phase.startYear);setEndDraft(phase.endYear);}}}>
+      <Popover open={open} onOpenChange={next=>{setOpen(next);if(next){setDraft(normalizeYearRange(phase,horizon));editedEndpoint.current='startYear';}}}>
         <PopoverTrigger asChild><Button variant="ghost" className="phase-range-button" aria-label={t('editPhaseRange',{number:index+1,range})}><CalendarRange size={14} /><span>{range}</span><ChevronDown size={12} /></Button></PopoverTrigger>
         <PopoverContent className="phase-range-popover" align="start" aria-label={t('phaseRange',{number:index+1})}>
-          <form onSubmit={event=>{event.preventDefault();if(draftValid){onChange({startYear:startDraft,endYear:endDraft});setOpen(false);}}}>
-            <h3>{t('phaseRange',{number:index+1})}</h3><p>{t('inclusive')}</p>
-            <div className="exact-phase-years"><div><Label htmlFor={`start-${phase.id}`}>{t('startYear')}</Label><Input id={`start-${phase.id}`} aria-label={t('phaseStart',{number:index+1})} type="number" inputMode="numeric" min={1} max={50} step={1} value={startDraft} onChange={event=>setStartDraft(event.target.value)} /></div><div><Label htmlFor={`end-${phase.id}`}>{t('endYear')}</Label><Input id={`end-${phase.id}`} aria-label={t('phaseEnd',{number:index+1})} type="number" inputMode="numeric" min={Number(startDraft)||1} max={50} step={1} value={endDraft} onChange={event=>setEndDraft(event.target.value)} aria-invalid={!draftValid} aria-describedby={!draftValid?`range-error-${phase.id}`:undefined} /></div></div>
-            {!draftValid && <p className="phase-error" id={`range-error-${phase.id}`} role="alert">{t('phaseError')}</p>}
-            <div className="phase-range-actions"><Button type="button" variant="ghost" size="sm" onClick={()=>setOpen(false)}>{t('cancel')}</Button><Button type="submit" size="sm" disabled={!draftValid}>{t('applyRange')}</Button></div>
+          <form noValidate onSubmit={event=>{event.preventDefault();onChange(normalizeYearRange(draft,horizon,editedEndpoint.current,phase));setOpen(false);}}>
+            <h3>{t('phaseRange',{number:index+1})}</h3><p id={`range-hint-${phase.id}`}>{t('phaseRangeHint',{max:n(horizon)})}</p>
+            <div className="exact-phase-years"><div><Label htmlFor={`start-${phase.id}`}>{t('startYear')}</Label><Input id={`start-${phase.id}`} aria-label={t('phaseStart',{number:index+1})} aria-describedby={`range-hint-${phase.id}`} type="number" inputMode="numeric" min={1} max={horizon} step={1} value={draft.startYear} onChange={event=>editYear('startYear',event.target.value)} onBlur={()=>finishYear('startYear')} /></div><div><Label htmlFor={`end-${phase.id}`}>{t('endYear')}</Label><Input id={`end-${phase.id}`} aria-label={t('phaseEnd',{number:index+1})} aria-describedby={`range-hint-${phase.id}`} type="number" inputMode="numeric" min={1} max={horizon} step={1} value={draft.endYear} onChange={event=>editYear('endYear',event.target.value)} onBlur={()=>finishYear('endYear')} /></div></div>
+            <p className="phase-range-help">{t('phaseRangeAutoAdjust')}</p>
+            <div className="phase-range-actions"><Button type="button" variant="ghost" size="sm" onClick={()=>setOpen(false)}>{t('cancel')}</Button><Button type="submit" size="sm">{t('applyRange')}</Button></div>
           </form>
         </PopoverContent>
       </Popover>
