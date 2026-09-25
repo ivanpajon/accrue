@@ -18,7 +18,7 @@ Open the localhost URL printed by the development server (normally http://localh
 ```sh
 npm run build
 npx tsc --noEmit
-node --test lib/compound.test.ts lib/preferences.test.ts
+node --test lib/compound.test.ts lib/preferences.test.ts lib/configurations.test.ts
 ```
 
 The calculation tests run directly with Node.js 22.18+ or 24+.
@@ -35,7 +35,8 @@ The calculation tests run directly with Node.js 22.18+ or 24+.
 - USD and EUR formatting (no exchange-rate conversion).
 - English and Spanish translations, including number formatting, charts, help, accessibility labels, and CSV exports. English is the default.
 - Light, stone-grey dark, and system appearance. System is the default and follows live OS changes.
-- Zustand persistence for language, currency, theme, calculator inputs, contribution phases, and chart preferences in localStorage.
+- Named investment configurations: Save the current investment and contribution plan, load one from the header folder button, explicitly replace an existing name, or delete a saved configuration.
+- Zustand automatically persists language, currency, theme, and chart preferences. Calculator drafts persist only when explicitly saved.
 - Lucide icons throughout.
 - Accessible shadcn controls, validation, and responsive layout.
 
@@ -45,13 +46,14 @@ The input interest rate is nominal annual interest. For m compounding periods pe
 
 A financial year contains 12 months, 52 weeks, or 26 two-week periods. Deposits recur from each phase's start. End-of-period deposits fall on period ends; beginning-of-period deposits fall on period starts. Beginning deposits on annual boundaries belong to the following year's table row. Deposits beyond the horizon are excluded. Calculations keep full floating-point precision and round only for display and CSV output.
 
-Returns are constant hypothetical assumptions. Taxes, fees, inflation, and variable returns are not modeled. Calculator data is stored only in this browser's localStorage under `compound-planner-v1`; it is not sent to a server or synced across devices. Reset restores the example plan while keeping language, currency, and appearance. The calculator also works when browser storage is unavailable.
+Returns are constant hypothetical assumptions. Taxes, fees, inflation, and variable returns are not modeled. Named configurations and preferences are stored only in this browser's localStorage under `compound-planner-v1` (schema version 2); they are not sent to a server or synced across devices. Reload starts with the example draft; choose a saved configuration to load it. Unsaved edits do not change saved snapshots. Language, currency, and appearance are independent preferences and remain unchanged when loading a plan. Reset restores the example plan while keeping saved configurations and preferences. A customized legacy autosave is migrated once into “Previous configuration” / “Configuración anterior.” The calculator remains usable when storage is unavailable, and explicit saves report storage failures.
 
 ## Main files
 
 - `app/page.tsx`: calculator interface.
 - `app/globals.css` and `app/preferences.css`: responsive styling and theme tokens.
 - `lib/i18n.ts`: typed English and Spanish dictionaries.
-- `lib/store.ts` and `lib/preferences.ts`: persisted Zustand state, validation, and theme initialization before paint.
+- `components/saved-configurations.tsx`: Save dialog and saved configuration picker.
+- `lib/store.ts`, `lib/configurations.ts`, and `lib/preferences.ts`: draft state, saved snapshots, storage migration, validation, and theme initialization before paint.
 - `lib/compound.ts`: independent cash-flow calculation engine.
-- `lib/compound.test.ts` and `lib/preferences.test.ts`: tests covering formulas, phase windows, gaps, timing, recurrence, persistence, translation parity, and edge cases.
+- `lib/compound.test.ts`, `lib/preferences.test.ts`, and `lib/configurations.test.ts`: tests covering formulas, phase windows, gaps, timing, recurrence, persistence, translation parity, and edge cases.

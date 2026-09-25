@@ -14,7 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { calculateProjection, contributionGaps, phaseRanges, validPhase, type Phase } from '@/lib/compound';
 import { locales, translator, type MessageKey } from '@/lib/i18n';
 import { usePreferences } from '@/lib/store';
-import type { Preferences } from '@/lib/preferences';
+import { SavedConfigurations } from '@/components/saved-configurations';
+import { STORAGE_KEY, type Preferences } from '@/lib/preferences';
 
 const phaseColors = ['#3264df', '#62a5fb', '#85c8c5', '#aa96db', '#d9ad64', '#dd8a9f'];
 function Choice({ value, onChange, options, label, id, icon, className = '' }: { value: string; onChange: (value: string) => void; options: { value: string; label: string }[]; label: string; id?: string; icon?: ReactNode; className?: string }) {
@@ -29,7 +30,12 @@ export default function Home() {
   const { initial, rate, compounds, years, phases, currency, timing, view, visible, language, theme, update, resetPlan } = usePreferences();
   const t = useMemo(() => translator(language), [language]);
   const locale = locales[language];
-  useEffect(() => { void usePreferences.persist.rehydrate(); }, []);
+  useEffect(() => {
+    void usePreferences.persist.rehydrate();
+    const sync = (event: StorageEvent) => { if (event.key === STORAGE_KEY || event.key === null) void usePreferences.persist.rehydrate(); };
+    window.addEventListener('storage',sync);
+    return () => window.removeEventListener('storage',sync);
+  }, []);
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {
@@ -90,7 +96,8 @@ export default function Home() {
         <Choice icon={<Languages size={15} />} label={t('language')} value={language} onChange={value => update({ language: value as Preferences['language'] })} options={[{ value: 'en', label: 'English' }, { value: 'es', label: 'Español' }]} className="language-choice" />
         <Choice icon={theme === 'system' ? <Monitor size={15} /> : theme === 'dark' ? <Moon size={15} /> : <Sun size={15} />} label={t('theme')} value={theme} onChange={value => update({ theme: value as Preferences['theme'] })} options={(['system','light','dark'] as const).map(value => ({ value, label: t(value) }))} className="theme-choice" />
       </div>
-      <Dialog><DialogTrigger asChild><Button variant="ghost" className="help-button"><CircleHelp size={17} /><span>{t('how')}</span></Button></DialogTrigger><DialogContent className="how-dialog" showCloseButton={false}><DialogClose asChild><Button variant="ghost" size="icon-sm" className="dialog-close" aria-label={t('close')}><X size={17} /></Button></DialogClose><DialogHeader><DialogTitle>{t('helpTitle')}</DialogTitle><DialogDescription>{t('helpIntro')}</DialogDescription></DialogHeader><div className="explanation">{(['1','2','3'] as const).map(n => <div key={n}><h3>{t(`help${n}`)}</h3><p>{t(`help${n}Text`)}</p></div>)}<h3>{t('assumptions')}</h3><p>{t('formula')}</p><p>{t('calendar')}</p><p>{t('caveats')}</p><p>{t('storageNote')}</p></div></DialogContent></Dialog>
+      <SavedConfigurations />
+      <Dialog><DialogTrigger asChild><Button variant="ghost" className="help-button" aria-label={t('how')}><CircleHelp size={17} /><span>{t('how')}</span></Button></DialogTrigger><DialogContent className="how-dialog" showCloseButton={false}><DialogClose asChild><Button variant="ghost" size="icon-sm" className="dialog-close" aria-label={t('close')}><X size={17} /></Button></DialogClose><DialogHeader><DialogTitle>{t('helpTitle')}</DialogTitle><DialogDescription>{t('helpIntro')}</DialogDescription></DialogHeader><div className="explanation">{(['1','2','3'] as const).map(n => <div key={n}><h3>{t(`help${n}`)}</h3><p>{t(`help${n}Text`)}</p></div>)}<h3>{t('assumptions')}</h3><p>{t('formula')}</p><p>{t('calendar')}</p><p>{t('caveats')}</p><p>{t('storageNote')}</p></div></DialogContent></Dialog>
     </div></header>
     <main className="main-container">
       <section className="page-heading"><div><div className="eyebrow">{t('eyebrow')}</div><h1>{t('heading')}<span>.</span></h1><p>{t('subtitle')}</p></div><Choice value={currency} onChange={value => update({ currency: value as Preferences['currency'] })} label={t('currency')} options={[{ value: 'USD', label: '$ USD' }, { value: 'EUR', label: '€ EUR' }]} className="currency-choice" /></section>
