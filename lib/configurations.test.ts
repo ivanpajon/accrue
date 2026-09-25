@@ -92,7 +92,24 @@ test('legacy custom autosaves migrate once into a recoverable named plan, includ
   store.getState().deleteConfiguration('previous-configuration');
   const reloaded=createPreferencesStore(() => storage);await reloaded.persist.rehydrate();
   assert.equal(reloaded.getState().savedConfigs.length,0);
-  assert.equal(readStoredPreferences({version:1,state:defaultPreferences()})?.savedConfigs.length,0);
+  assert.equal(readStoredPreferences({version:1,state:{...defaultPreferences(),compounds:'12'}})?.savedConfigs.length,0);
+  assert.equal(readStoredPreferences({version:1,state:{language:'es'}})?.savedConfigs.length,0);
+  assert.equal(readStoredPreferences({version:1,state:defaultPreferences()})?.savedConfigs[0].configuration.compounds,'1');
+});
+
+test('new and reset plans use yearly compounding without changing saved monthly plans', async () => {
+  const storage=memoryStorage();const store=createPreferencesStore(()=>storage);
+  assert.equal(store.getState().compounds,'1');
+  store.getState().update({compounds:'12'});
+  store.getState().saveConfiguration('Monthly plan');
+  const id=store.getState().activeConfigId!;
+  const reloaded=createPreferencesStore(()=>storage);await reloaded.persist.rehydrate();
+  assert.equal(reloaded.getState().compounds,'1');
+  assert.equal(reloaded.getState().loadConfiguration(id),true);
+  assert.equal(reloaded.getState().compounds,'12');
+  reloaded.getState().resetPlan();
+  assert.equal(reloaded.getState().compounds,'1');
+  assert.equal(reloaded.getState().savedConfigs[0].configuration.compounds,'12');
 });
 test('malformed saved entries are isolated and unexpected draft roots are ignored', () => {
   const valid={id:'one',name:'Plan',updatedAt:'2026-09-25T00:00:00Z',configuration:snapshotConfiguration(defaultPreferences())};

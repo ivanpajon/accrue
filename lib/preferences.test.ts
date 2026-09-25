@@ -3,8 +3,9 @@ import { test } from 'node:test';
 import { defaultPreferences, sanitizePreferences } from './preferences.ts';
 import { messages, translator } from './i18n.ts';
 import { contributionGaps } from './compound.ts';
-test('defaults are English, system theme, and USD', () => {
+test('defaults are English, system theme, USD, and yearly compounding', () => {
   const p=defaultPreferences(); assert.equal(p.language,'en'); assert.equal(p.theme,'system'); assert.equal(p.currency,'USD');
+  assert.equal(p.compounds,'1');
 });
 test('valid preferences and explicit contribution windows survive a storage round trip', () => {
   const original={...defaultPreferences(),language:'es',theme:'dark',currency:'EUR',years:'20',phases:[{id:'custom',amount:'250',frequency:'4',startYear:'3',endYear:'8'}]};

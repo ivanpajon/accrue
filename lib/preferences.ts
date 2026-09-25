@@ -9,7 +9,7 @@ export type Preferences = {
 };
 export const STORAGE_KEY = 'compound-planner-v1';
 export function defaultPreferences(): Preferences {
-  return { language: 'en', theme: 'system', currency: 'USD', initial: '10000', rate: '7', compounds: '12', years: '10', phases: defaultPhases.map(p => ({ ...p })), timing: 'end', view: 'growth', visible: { total: true, contributed: true, gains: true } };
+  return { language: 'en', theme: 'system', currency: 'USD', initial: '10000', rate: '7', compounds: '1', years: '10', phases: defaultPhases.map(p => ({ ...p })), timing: 'end', view: 'growth', visible: { total: true, contributed: true, gains: true } };
 }
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const numeric = (value: unknown, min: number, max: number, integer = false): value is string => typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= min && Number(value) <= max && (!integer || Number.isInteger(Number(value)));

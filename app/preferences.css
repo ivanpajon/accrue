@@ -5,6 +5,7 @@
 .icon-choice:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
 .configuration-controls{display:flex;align-items:center;flex-wrap:wrap;gap:7px;flex-shrink:0;max-width:100%}
 .configuration-menu-button{width:32px;height:36px}
+.configuration-save-group .save-configuration:disabled{opacity:1;color:var(--muted-foreground)}
 .configuration-context{display:flex;align-items:center;gap:12px;padding:14px 16px;margin:-8px 0 24px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--card);min-width:0}
 .configuration-context>svg{flex-shrink:0;color:var(--muted-foreground)}
 .configuration-identity{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}

@@ -39,8 +39,10 @@ export function readStoredPreferences(envelope: unknown): PersistedPreferences |
   let savedConfigs: SavedConfiguration[] = [];
   if (envelope.version === 1) {
     // Keep a previous custom autosave available without automatically loading it.
-    const legacy = configurationShape(state) ? snapshotConfiguration(state) : snapshotConfiguration(preferences);
-    if (!sameConfiguration(legacy,defaultPreferences())) savedConfigs = [{ id:'previous-configuration', name:preferences.language === 'es' ? 'Configuración anterior' : 'Previous configuration', updatedAt:new Date().toISOString(), configuration:legacy }];
+    // Version 1 used monthly compounding; compare against that historical default.
+    const legacyDefaults = {...defaultPreferences(),compounds:'12'};
+    const legacy = configurationShape(state) ? snapshotConfiguration(state) : snapshotConfiguration(sanitizePreferences({...legacyDefaults,...state}));
+    if (!sameConfiguration(legacy,legacyDefaults)) savedConfigs = [{ id:'previous-configuration', name:preferences.language === 'es' ? 'Configuración anterior' : 'Previous configuration', updatedAt:new Date().toISOString(), configuration:legacy }];
   } else if (Array.isArray(state.savedConfigs)) {
     const ids = new Set<string>();
     const names = new Set<string>();

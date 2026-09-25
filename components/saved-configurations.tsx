@@ -83,8 +83,8 @@ export function SavedConfigurations() {
   }
 
   return <div className="configuration-controls" ref={controlsRef}>
-    {active ? <ButtonGroup>
-      <Button className="save-configuration" disabled={!valid || unchanged} title={!valid?t('saveInvalid'):active.name} onClick={saveChanges}><Save size={16} />{t('saveChanges')}</Button>
+    {active ? <ButtonGroup className="configuration-save-group">
+      <Button variant="outline" className="save-configuration" disabled={!valid || unchanged} title={!valid?t('saveInvalid'):active.name} onClick={saveChanges}><Save size={16} />{t('saveChanges')}</Button>
       <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="icon" className="configuration-menu-button" aria-label={t('configurationActions')}><ChevronDown size={16} /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
         <DropdownMenuItem disabled={!valid} onSelect={()=>openSave(true)}><Copy />{t('saveAsCopy')}</DropdownMenuItem>
         <DropdownMenuItem disabled={unchanged} onSelect={()=>requestAction('revert')}><RotateCcw />{t('revertConfiguration')}</DropdownMenuItem>
