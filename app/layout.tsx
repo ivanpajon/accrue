@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./preferences.css";
+import { preferenceBootstrap } from "@/lib/preferences";
 
 export const metadata: Metadata = {
   title: "Compound — Compound interest calculator",
@@ -19,7 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: preferenceBootstrap }} /></head>
       <body className="antialiased">{children}</body>
     </html>
   );
