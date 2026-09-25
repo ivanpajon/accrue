@@ -1,0 +1,11 @@
+engineStrict: true
+verifyDepsBeforeRun: false
+
+overrides:
+  'miniflare>sharp': 0.35.4
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+  workerd: true

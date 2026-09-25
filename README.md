@@ -4,13 +4,13 @@ Accrue is a responsive compound-interest calculator built with React 19, TypeScr
 
 ## Run locally
 
-Requires Node.js 22.13 or newer and npm.
+Requires Node.js 26 or newer and pnpm 11. The project pins Node.js 26.10.0 in `.node-version` and pnpm 11.28.0 in `package.json`. Install pnpm with `corepack enable` and `corepack install` if Corepack is available, or use the [pnpm installation guide](https://pnpm.io/installation).
 
 ```sh
-npm ci
-npm run build
+pnpm install --frozen-lockfile
+pnpm run build
 node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_nosy_anita_blake.sql
-npm run dev
+pnpm run dev
 ```
 
 Open the localhost URL printed by the development server (normally http://localhost:5173) and choose Sign in with ChatGPT. The starter simulates a development account on loopback only; production uses Sites-managed sign-in. Apply the initial SQL file only once per local database. Local development data is separate from hosted data.
@@ -18,12 +18,12 @@ Open the localhost URL printed by the development server (normally http://localh
 ## Build and verify
 
 ```sh
-npm run build
-npx tsc --noEmit
-node --test lib/compound.test.ts lib/preferences.test.ts lib/configurations.test.ts lib/phase-range.test.ts
+pnpm run build
+pnpm run typecheck
+pnpm test
 ```
 
-The calculation tests run directly with Node.js 22.18+ or 24+ (database tests use the built-in `node:sqlite` module).
+The tests run directly with Node.js 26; database tests use the built-in `node:sqlite` module. CI can run `pnpm run install:ci` for a frozen install. Package-manager settings and dependency build approvals live in `pnpm-workspace.yaml`.
 
 ## Features
 
@@ -54,7 +54,7 @@ The calculation tests run directly with Node.js 22.18+ or 24+ (database tests us
 - Preference updates patch only changed fields. Plan updates and deletes check revisions to prevent overwriting another device’s changes.
 - The API validates payloads, checks same-origin JSON writes, and prevents caching of account data. Network failures keep the working draft available with a retry message.
 - There is no browser-storage persistence or legacy-data import.
-- `.openai/hosting.json` declares the native `DB` binding. Sites provisions the database and applies the checked-in Drizzle schema on publication. For later schema edits run `npm run db:generate`, inspect the generated SQL, and apply only new migrations locally.
+- `.openai/hosting.json` declares the native `DB` binding. Sites provisions the database and applies the checked-in Drizzle schema on publication. For later schema edits run `pnpm run db:generate`, inspect the generated SQL, and apply only new migrations locally.
 
 ## Calculation model
 

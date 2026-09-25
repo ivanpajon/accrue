@@ -28,7 +28,9 @@ report_store() {
 # Publish preparation failures too; the optional report never decides success.
 trap 'report_store || true' EXIT
 
-if [[ -n "${SITES_PNPM_BIN:-}" && -f "${SITES_PNPM_BIN}" && -r "${SITES_PNPM_BIN}" ]]; then
+if [[ -n "${npm_execpath:-}" && "${npm_config_user_agent:-}" == pnpm/11.* ]]; then
+  pnpm_command=(node "${npm_execpath}")
+elif [[ -n "${SITES_PNPM_BIN:-}" && -f "${SITES_PNPM_BIN}" && -r "${SITES_PNPM_BIN}" ]]; then
   pnpm_command=(node "${SITES_PNPM_BIN}")
 elif [[ "${require_shared}" == 1 ]]; then
   echo "[sites] the image-pinned pnpm is unavailable" >&2
@@ -40,7 +42,7 @@ elif command -v corepack >/dev/null; then
 elif command -v pnpm >/dev/null; then
   pnpm_command=(pnpm)
 else
-  echo "This pnpm project requires pnpm 11.25.0 or Corepack." >&2
+  echo "This pnpm project requires pnpm 11.28.0 or Corepack." >&2
   exit 69
 fi
 
@@ -77,8 +79,8 @@ export XDG_CACHE_HOME="${runtime_root}/xdg-cache" XDG_DATA_HOME="${runtime_root}
 mkdir -p "${XDG_CACHE_HOME}" "${XDG_DATA_HOME}" || exit 70
 pnpm_version="$(timeout --signal=TERM --kill-after="${SITES_INSTALL_KILL_AFTER:-15s}" \
   "${SITES_PNPM_BOOTSTRAP_TIMEOUT:-30s}" "${pnpm_command[@]}" --version)"
-if [[ "${pnpm_version}" != "11.25.0" ]]; then
-  echo "This project requires pnpm 11.25.0 and its v11 store format." >&2
+if [[ "${pnpm_version}" != "11.28.0" ]]; then
+  echo "This project requires pnpm 11.28.0 and its v11 store format." >&2
   exit 69
 fi
 
@@ -155,7 +157,7 @@ try {
   const filename = process.argv[2];
   if (statSync(filename).size > 4096) process.exit(1);
   const seed = JSON.parse(readFileSync(filename, "utf8"));
-  process.exit(seed.version === 1 && seed.pnpm_version === "11.25.0" &&
+  process.exit(seed.version === 1 && seed.pnpm_version === "11.28.0" &&
     seed.store_version === "v11" && /^[a-f0-9]{64}$/.test(seed.lockfile_sha256) ? 0 : 1);
 } catch { process.exit(1); }
 NODE

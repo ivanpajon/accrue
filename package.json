@@ -2,11 +2,15 @@
   "name": "accrue",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.28.0",
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=26.0.0",
+    "pnpm": ">=11.0.0 <12"
   },
   "scripts": {
     "install:ci": "node scripts/install-ci.mjs",
+    "test": "node --test lib/compound.test.ts lib/preferences.test.ts lib/configurations.test.ts lib/phase-range.test.ts",
+    "typecheck": "tsc --noEmit",
     "dev": "node scripts/run-framework.mjs dev",
     "build": "node scripts/run-framework.mjs build",
     "start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
@@ -45,7 +49,7 @@
     "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
     "@tailwindcss/postcss": "4.2.1",
-    "@types/node": "22.19.19",
+    "@types/node": "26.6.2",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
@@ -61,10 +65,5 @@
     "vite": "8.0.13",
     "wrangler": "4.92.0"
   },
-  "type": "module",
-  "overrides": {
-    "miniflare": {
-      "sharp": "0.35.4"
-    }
-  }
+  "type": "module"
 }
