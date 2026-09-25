@@ -114,3 +114,57 @@ test('stale tabs preserve plans saved or deleted elsewhere when editing, saving,
   const reloaded=createPreferencesStore(() => storage);await reloaded.persist.rehydrate();
   assert.deepEqual(reloaded.getState().savedConfigs.map(item=>item.name),['Plan B']);
 });
+
+test('saving changes updates the active identity and leaves appearance preferences out of dirty state', () => {
+  const storage=memoryStorage();const store=createPreferencesStore(()=>storage);
+  store.getState().update(customPlan);store.getState().saveConfiguration('Retirement');
+  const original=store.getState().savedConfigs[0];
+  store.getState().update({language:'es',theme:'dark',currency:'EUR',view:'table'});
+  assert.equal(sameConfiguration(store.getState(),original.configuration),true);
+  store.getState().update({initial:'45000'});
+  assert.equal(sameConfiguration(store.getState(),original.configuration),false);
+  assert.equal(store.getState().updateActiveConfiguration(),'saved');
+  assert.equal(store.getState().savedConfigs.length,1);
+  assert.equal(store.getState().activeConfigId,original.id);
+  assert.equal(store.getState().savedConfigs[0].name,'Retirement');
+  assert.equal(store.getState().savedConfigs[0].configuration.initial,'45000');
+  assert.equal(sameConfiguration(store.getState(),store.getState().savedConfigs[0].configuration),true);
+  store.getState().update({initial:'90000',phases:[]});
+  assert.equal(store.getState().loadConfiguration(original.id),true);
+  assert.equal(store.getState().initial,'45000');
+  assert.equal(store.getState().phases.length,1);
+  assert.equal(store.getState().activeConfigId,original.id);
+  assert.equal(store.getState().currency,'EUR');
+  store.getState().resetPlan();
+  assert.equal(store.getState().activeConfigId,null);
+  assert.equal(store.getState().savedConfigs.length,1);
+});
+
+test('active updates preserve drafts on failure and never recreate a deleted plan', () => {
+  const storage=memoryStorage();const a=createPreferencesStore(()=>storage);const b=createPreferencesStore(()=>storage);
+  a.getState().saveConfiguration('Plan');const original=a.getState().savedConfigs[0];
+  a.getState().update({initial:'45678'});
+  b.getState().deleteConfiguration(original.id);
+  assert.equal(a.getState().updateActiveConfiguration(),'missing');
+  assert.equal(a.getState().initial,'45678');
+  assert.equal(a.getState().activeConfigId,null);
+  assert.equal(a.getState().savedConfigs.length,0);
+  assert.equal(a.getState().saveConfiguration('Plan',original.id),'missing');
+  assert.equal(a.getState().saveConfiguration('Recovered plan'),'saved');
+  const recovered=a.getState().savedConfigs[0];
+  a.getState().update({initial:'56789'});storage.block();
+  assert.equal(a.getState().updateActiveConfiguration(),'storageError');
+  assert.equal(a.getState().initial,'56789');
+  assert.equal(a.getState().activeConfigId,recovered.id);
+  assert.deepEqual(a.getState().savedConfigs,[recovered]);
+});
+
+test('updating a stale active plan retains its latest saved name', () => {
+  const storage=memoryStorage();const a=createPreferencesStore(()=>storage);const b=createPreferencesStore(()=>storage);
+  a.getState().saveConfiguration('Original name');const id=a.getState().activeConfigId!;
+  b.getState().loadConfiguration(id);b.getState().saveConfiguration('Renamed plan',id);
+  a.getState().update({initial:'20000'});
+  assert.equal(a.getState().updateActiveConfiguration(),'saved');
+  assert.equal(a.getState().savedConfigs[0].id,id);
+  assert.equal(a.getState().savedConfigs[0].name,'Renamed plan');
+});

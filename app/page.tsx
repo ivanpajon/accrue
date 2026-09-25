@@ -17,7 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { calculateProjection, contributionGaps, phaseRanges, validPhase, type Phase } from '@/lib/compound';
 import { locales, translator, type MessageKey } from '@/lib/i18n';
 import { usePreferences } from '@/lib/store';
-import { SavedConfigurations } from '@/components/saved-configurations';
+import { ConfigurationContext, SavedConfigurations } from '@/components/saved-configurations';
 import { ContributionPhase } from '@/components/contribution-phase';
 import { STORAGE_KEY, type Preferences } from '@/lib/preferences';
 
@@ -32,7 +32,8 @@ function NumberField({ id, label, accessibleLabel, value, onChange, prefix, suff
 }
 
 export default function Home() {
-  const { initial, rate, compounds, years, phases, currency, timing, view, visible, language, theme, update, resetPlan } = usePreferences();
+  const { initial, rate, compounds, years, phases, currency, timing, view, visible, language, theme, update, resetPlan, activeConfigId, savedConfigs } = usePreferences();
+  const editingConfiguration = savedConfigs.some(item=>item.id===activeConfigId);
   const t = useMemo(() => translator(language), [language]);
   const locale = locales[language];
   useEffect(() => {
@@ -105,9 +106,10 @@ export default function Home() {
     </div></header>
     <main className="main-container">
       <section className="page-heading"><div><h1>{t('heading')}</h1><p>{t('subtitle')}</p></div><SavedConfigurations /></section>
+      <ConfigurationContext />
       {valid && final && <div className="mobile-summary" aria-live="polite"><span>{t('mobileBalance', { years: number(Number(years)) })}</span><strong>{metricMoney(final.total)}</strong><small>{t('mobileDetails', { contributed: metricMoney(final.contributed), gains: metricMoney(final.gains) })}</small></div>}
       <div className="workspace"><aside className="controls-column" aria-label={t('settings')}>
-        <section className="panel settings-panel"><div className="section-heading"><h2><Wallet size={18} />{t('investment')}</h2><Button variant="ghost" size="icon-sm" title={t('reset')} aria-label={t('reset')} onClick={resetPlan}><RotateCcw size={15} /></Button></div><div className="settings-fields">
+        <section className="panel settings-panel"><div className="section-heading"><h2><Wallet size={18} />{t('investment')}</h2>{!editingConfiguration && <Button variant="ghost" size="icon-sm" title={t('reset')} aria-label={t('reset')} onClick={resetPlan}><RotateCcw size={15} /></Button>}</div><div className="settings-fields">
           <NumberField id="initial" label={t('initial')} value={initial} onChange={initial => update({ initial })} prefix={symbol} />
           <div className="field">
             <div className="interest-labels"><Label htmlFor="rate">{t('rate')}</Label><Label htmlFor="compounding">{t('compounded')}</Label></div>

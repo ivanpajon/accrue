@@ -4,13 +4,14 @@ import { persist, type PersistStorage } from 'zustand/middleware';
 import { defaultPreferences, STORAGE_KEY, type Preferences } from './preferences.ts';
 import { MAX_CONFIGURATIONS, MAX_NAME_LENGTH, persistedPreferences, readStoredPreferences, snapshotConfiguration, validConfiguration, type PersistedPreferences, type SavedConfiguration } from './configurations.ts';
 
-export type SaveResult = 'saved' | 'invalidName' | 'invalidConfiguration' | 'duplicate' | 'limit' | 'storageError';
+export type SaveResult = 'saved' | 'invalidName' | 'invalidConfiguration' | 'duplicate' | 'limit' | 'storageError' | 'missing';
 type Store = Preferences & {
   savedConfigs: SavedConfiguration[];
   activeConfigId: string | null;
   update: (patch: Partial<Preferences> | ((state: Preferences) => Partial<Preferences>)) => void;
   resetPlan: () => void;
   saveConfiguration: (name: string, replaceId?: string) => SaveResult;
+  updateActiveConfiguration: () => SaveResult;
   loadConfiguration: (id: string) => boolean;
   deleteConfiguration: (id: string) => boolean;
 };
@@ -59,11 +60,26 @@ export function createPreferencesStore(getStorage: () => BrowserStorage | undefi
       const duplicate = library.find(item => item.name.toLowerCase() === name.toLowerCase());
       if (duplicate && duplicate.id !== replaceId) {set({savedConfigs:library});return 'duplicate';}
       const existing = library.find(item => item.id === replaceId);
+      if (replaceId && !existing) {set({savedConfigs:library});return 'missing';}
       if (!existing && library.length >= MAX_CONFIGURATIONS) return 'limit';
       const item: SavedConfiguration = {id:existing?.id ?? crypto.randomUUID(), name, updatedAt:new Date().toISOString(), configuration:snapshotConfiguration(state)};
       const savedConfigs = [item,...library.filter(saved => saved.id !== item.id)];
       if (!write(persistedPreferences({...state,savedConfigs}))) return 'storageError';
       set({savedConfigs,activeConfigId:item.id});
+      return 'saved';
+    },
+    updateActiveConfiguration: () => {
+      const state = get();
+      if (!validConfiguration(state)) return 'invalidConfiguration';
+      let library: SavedConfiguration[];
+      try { library = latest()?.savedConfigs ?? []; } catch { return 'storageError'; }
+      const existing = library.find(item => item.id === state.activeConfigId);
+      // A deleted plan must not silently reappear; keep the working draft recoverable.
+      if (!existing) {set({savedConfigs:library,activeConfigId:null});return 'missing';}
+      const item: SavedConfiguration = {...existing,updatedAt:new Date().toISOString(),configuration:snapshotConfiguration(state)};
+      const savedConfigs = [item,...library.filter(saved => saved.id !== item.id)];
+      if (!write(persistedPreferences({...state,savedConfigs}))) return 'storageError';
+      set({savedConfigs});
       return 'saved';
     },
     loadConfiguration: id => {

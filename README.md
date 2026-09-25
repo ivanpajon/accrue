@@ -36,6 +36,7 @@ The calculation tests run directly with Node.js 22.18+ or 24+.
 - English and Spanish translations, including number formatting, charts, help, accessibility labels, and CSV exports. English is the default.
 - Default shadcn neutral theme in light and dark mode, with shared color/radius tokens and the standard shadcn chart palette. System appearance is the default and follows live OS changes.
 - Named investment configurations: Save the current investment and contribution plan, load one from the folder button beside Save, explicitly replace an existing name, or delete a saved configuration.
+- A persistent context strip identifies the active saved configuration and whether it has unsaved changes. Save changes updates it directly; the adjacent menu offers Save as copy, Revert to saved, and New configuration. Reverting or starting over asks before discarding edits, and the example reset is hidden while editing a saved configuration.
 - Zustand automatically persists language, currency, theme, and chart preferences. Calculator drafts persist only when explicitly saved.
 - Compact icon-only language, appearance, and currency menus in the header; Save and saved configurations beside the page title.
 - Joined annual-rate/compounding and contribution amount/frequency controls and accessible year-range sliders, with an exact-year popover for precise editing. Phase dates remain intact when the investment horizon changes.
