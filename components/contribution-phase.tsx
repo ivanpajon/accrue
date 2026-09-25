@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 import { CalendarRange, ChevronDown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,8 +14,8 @@ import { locales, translator, type Language, type MessageKey } from '@/lib/i18n'
 const recurrenceKeys = [['12','monthly'],['52','weekly'],['26','fortnightly'],['4','quarterly'],['2','halfYearly'],['1','yearly']] as const;
 const perPeriod: Record<string,MessageKey> = {'12':'perMonth','52':'perWeek','26':'perFortnight','4':'perQuarter','2':'perHalfYear','1':'perYear'};
 
-export function ContributionPhase({phase,index,years,symbol,color,language,onChange,onRemove}: {
-  phase:Phase; index:number; years:number; symbol:string; color:string; language:Language;
+export function ContributionPhase({phase,index,years,symbol,language,onChange,onRemove}: {
+  phase:Phase; index:number; years:number; symbol:string; language:Language;
   onChange:(patch:Partial<Phase>) => void; onRemove:() => void;
 }) {
   const t = translator(language);
@@ -37,7 +37,7 @@ export function ContributionPhase({phase,index,years,symbol,color,language,onCha
   const draftValid = dateValid(startDraft,endDraft);
   const count = end-start+1;
 
-  return <article className="contribution-phase" style={{'--phase-color':color} as CSSProperties} aria-label={t('phaseName',{number:index+1})}>
+  return <article className="contribution-phase" aria-label={t('phaseName',{number:index+1})}>
     <div className="contribution-phase-heading"><span className="phase-marker" aria-hidden="true">{n(index+1)}</span><strong>{t('phaseName',{number:index+1})}</strong><Button variant="ghost" size="icon-sm" className="phase-remove" aria-label={t('removePhase',{number:index+1})} onClick={onRemove}><X size={15} /></Button></div>
     <div className={`contribution-amount-group ${amountValid?'':'invalid'}`}>
       <div className="contribution-amount"><Label className="sr-only" htmlFor={`amount-${phase.id}`}>{t('phaseAmount',{number:index+1})}</Label><span aria-hidden="true">{symbol}</span><Input id={`amount-${phase.id}`} type="number" inputMode="decimal" min={0} max={1e9} step="any" value={phase.amount} onChange={event=>onChange({amount:event.target.value})} aria-invalid={!amountValid} /></div>
