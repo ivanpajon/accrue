@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, type CSSProperties, type ReactNode } from 'react';
-import { ArrowUpRight, ChartNoAxesCombined, CircleHelp, Download, Info, Layers3, Languages, Monitor, Moon, Sun, Plus, RotateCcw, Sparkles, TrendingUp, Wallet, X } from 'lucide-react';
+import { useEffect, useMemo, type ReactNode } from 'react';
+import { ArrowUpRight, ChartNoAxesCombined, CircleHelp, DollarSign, Download, Euro, Info, Layers3, Languages, Monitor, Moon, Sun, Plus, RotateCcw, Sparkles, TrendingUp, Wallet, X } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as ChartTooltip, XAxis, YAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
@@ -15,11 +16,13 @@ import { calculateProjection, contributionGaps, phaseRanges, validPhase, type Ph
 import { locales, translator, type MessageKey } from '@/lib/i18n';
 import { usePreferences } from '@/lib/store';
 import { SavedConfigurations } from '@/components/saved-configurations';
+import { ContributionPhase } from '@/components/contribution-phase';
 import { STORAGE_KEY, type Preferences } from '@/lib/preferences';
 
 const phaseColors = ['#3264df', '#62a5fb', '#85c8c5', '#aa96db', '#d9ad64', '#dd8a9f'];
-function Choice({ value, onChange, options, label, id, icon, className = '' }: { value: string; onChange: (value: string) => void; options: { value: string; label: string }[]; label: string; id?: string; icon?: ReactNode; className?: string }) {
-  return <Select value={value} onValueChange={onChange}><SelectTrigger id={id} aria-label={label} className={`choice ${className}`}>{icon}<SelectValue /></SelectTrigger><SelectContent position="popper">{options.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>;
+function Choice({ value, onChange, options, label, id, icon, iconOnly = false, className = '' }: { value: string; onChange: (value: string) => void; options: { value: string; label: string }[]; label: string; id?: string; icon?: ReactNode; iconOnly?: boolean; className?: string }) {
+  const trigger = <SelectTrigger id={id} aria-label={label} showChevron={!iconOnly} className={`${iconOnly?'icon-choice':'choice'} ${className}`}>{icon}{iconOnly ? <span className="sr-only"><SelectValue /></span> : <SelectValue />}</SelectTrigger>;
+  return <Select value={value} onValueChange={onChange}>{iconOnly ? <Tooltip><TooltipTrigger asChild>{trigger}</TooltipTrigger><TooltipContent sideOffset={8}>{label}: {options.find(option=>option.value===value)?.label}</TooltipContent></Tooltip> : trigger}<SelectContent position="popper" align={iconOnly?'end':'center'}><SelectGroup>{iconOnly && <SelectLabel>{label}</SelectLabel>}{options.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectGroup></SelectContent></Select>;
 }
 function NumberField({ id, label, accessibleLabel, value, onChange, prefix, suffix, min = 0, max = 1e9, step = 'any' }: { id: string; label: string; accessibleLabel?: string; value: string; onChange: (value: string) => void; prefix?: string; suffix?: string; min?: number; max?: number; step?: string }) {
   const invalid = value.trim() === '' || !Number.isFinite(Number(value)) || Number(value) < min || Number(value) > max || (step === '1' && !Number.isInteger(Number(value)));
@@ -62,7 +65,6 @@ export default function Home() {
   const percent = (value: number, digits = 1, signed = false) => new Intl.NumberFormat(locale, { style: 'percent', minimumFractionDigits: digits, maximumFractionDigits: digits, signDisplay: signed ? 'exceptZero' : 'auto' }).format(value);
   const duration = (count: number) => t(count === 1 ? 'yearCount' : 'yearsCount', { count: number(count) });
   const rangeLabel = (start: number, end: number) => start === end ? t('yearSingle', { year: number(start) }) : t('yearRange', { start: number(start), end: number(end) });
-  const frequencyOptions = ([['12','monthly'],['52','weekly'],['26','fortnightly'],['4','quarterly'],['2','halfYearly'],['1','yearly']] as const).map(([value, key]) => ({ value, label: t(key) }));
   const perPeriod: Record<string, MessageKey> = { '12':'perMonth', '52':'perWeek', '26':'perFortnight', '4':'perQuarter', '2':'perHalfYear', '1':'perYear' };
   const validAmount = (value: string) => value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1e9;
   const valid = validAmount(initial) && rate.trim() !== '' && Number.isFinite(Number(rate)) && Number(rate) >= -50 && Number(rate) <= 100 && Number.isInteger(Number(years)) && Number(years) >= 1 && Number(years) <= 50 && phases.every(validPhase);
@@ -88,34 +90,29 @@ export default function Home() {
   const csvHeader = [t('year'), ...(['csvAdded','csvInterest','contributed','csvGains','tableBalance'] as const).map(key => `${t(key)} (${currency})`)];
   const csvContent = '\uFEFF' + [csvHeader.join(delimiter), ...rows.map(row => [row.year, ...[row.addition, row.interest, row.contributed, row.gains, row.total].map(csvNumber)].join(delimiter))].join('\r\n');
   const csvHref = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
-  return <div className="app-shell">
+  return <TooltipProvider delayDuration={250}><div className="app-shell">
     <header className="topbar"><div className="topbar-inner">
       <div className="brand"><span className="brand-icon"><ChartNoAxesCombined size={21} strokeWidth={2.3} /></span>compound<span className="brand-period">.</span></div>
       <span className="header-divider" /><span className="header-caption">{t('tagline')}</span>
       <div className="preferences-controls">
-        <Choice icon={<Languages size={15} />} label={t('language')} value={language} onChange={value => update({ language: value as Preferences['language'] })} options={[{ value: 'en', label: 'English' }, { value: 'es', label: 'Español' }]} className="language-choice" />
-        <Choice icon={theme === 'system' ? <Monitor size={15} /> : theme === 'dark' ? <Moon size={15} /> : <Sun size={15} />} label={t('theme')} value={theme} onChange={value => update({ theme: value as Preferences['theme'] })} options={(['system','light','dark'] as const).map(value => ({ value, label: t(value) }))} className="theme-choice" />
+        <Choice iconOnly icon={<Languages size={18} />} label={t('language')} value={language} onChange={value => update({ language: value as Preferences['language'] })} options={[{ value: 'en', label: 'English' }, { value: 'es', label: 'Español' }]} />
+        <Choice iconOnly icon={theme === 'system' ? <Monitor size={18} /> : theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />} label={t('theme')} value={theme} onChange={value => update({ theme: value as Preferences['theme'] })} options={(['system','light','dark'] as const).map(value => ({ value, label: t(value) }))} />
+        <Choice iconOnly icon={currency==='EUR'?<Euro size={18} />:<DollarSign size={18} />} value={currency} onChange={value=>update({currency:value as Preferences['currency']})} label={t('currency')} options={[{value:'USD',label:'USD'},{value:'EUR',label:'EUR'}]} />
       </div>
-      <SavedConfigurations />
       <Dialog><DialogTrigger asChild><Button variant="ghost" className="help-button" aria-label={t('how')}><CircleHelp size={17} /><span>{t('how')}</span></Button></DialogTrigger><DialogContent className="how-dialog" showCloseButton={false}><DialogClose asChild><Button variant="ghost" size="icon-sm" className="dialog-close" aria-label={t('close')}><X size={17} /></Button></DialogClose><DialogHeader><DialogTitle>{t('helpTitle')}</DialogTitle><DialogDescription>{t('helpIntro')}</DialogDescription></DialogHeader><div className="explanation">{(['1','2','3'] as const).map(n => <div key={n}><h3>{t(`help${n}`)}</h3><p>{t(`help${n}Text`)}</p></div>)}<h3>{t('assumptions')}</h3><p>{t('formula')}</p><p>{t('calendar')}</p><p>{t('caveats')}</p><p>{t('storageNote')}</p></div></DialogContent></Dialog>
     </div></header>
     <main className="main-container">
-      <section className="page-heading"><div><div className="eyebrow">{t('eyebrow')}</div><h1>{t('heading')}<span>.</span></h1><p>{t('subtitle')}</p></div><Choice value={currency} onChange={value => update({ currency: value as Preferences['currency'] })} label={t('currency')} options={[{ value: 'USD', label: '$ USD' }, { value: 'EUR', label: '€ EUR' }]} className="currency-choice" /></section>
+      <section className="page-heading"><div><div className="eyebrow">{t('eyebrow')}</div><h1>{t('heading')}<span>.</span></h1><p>{t('subtitle')}</p></div><SavedConfigurations /></section>
       {valid && final && <div className="mobile-summary" aria-live="polite"><span>{t('mobileBalance', { years: number(Number(years)) })}</span><strong>{metricMoney(final.total)}</strong><small>{t('mobileDetails', { contributed: metricMoney(final.contributed), gains: metricMoney(final.gains) })}</small></div>}
       <div className="workspace"><aside className="controls-column" aria-label={t('settings')}>
         <section className="panel settings-panel"><div className="section-heading"><h2><Wallet size={18} />{t('investment')}</h2><Button variant="ghost" size="icon-sm" title={t('reset')} aria-label={t('reset')} onClick={resetPlan}><RotateCcw size={15} /></Button></div><div className="settings-fields">
           <NumberField id="initial" label={t('initial')} value={initial} onChange={initial => update({ initial })} prefix={symbol} />
           <div className="two-fields"><NumberField id="rate" label={t('rate')} value={rate} onChange={rate => update({ rate })} suffix="%" min={-50} max={100} /><div className="field"><Label htmlFor="compounding">{t('compounded')}</Label><Choice id="compounding" label={t('compounding')} value={compounds} onChange={compounds => update({ compounds })} options={([['365','daily'],['12','monthly'],['4','quarterly'],['2','halfYearly'],['1','yearly']] as const).map(([value,key]) => ({ value, label:t(key) }))} /></div></div>
           <NumberField id="years" label={t('period')} value={years} onChange={years => update({ years })} suffix={t('years')} min={1} max={50} step="1" />
-          <fieldset className="years-slider"><legend className="sr-only">{t('periodYears')}</legend><Slider min={1} max={50} step={1} value={[Math.min(50, Math.max(1, Number(years) || 1))]} onValueChange={value => update({ years: String(value[0]) })} /><div className="slider-labels"><span>{duration(1)}</span><span>{duration(50)}</span></div></fieldset>
+          <fieldset className="years-slider"><legend className="sr-only">{t('periodYears')}</legend><Slider min={1} max={50} step={1} thumbLabels={[t('periodYears')]} thumbValueTexts={[duration(Number(years)||1)]} value={[Math.min(50, Math.max(1, Number(years) || 1))]} onValueChange={value => update({ years: String(value[0]) })} /><div className="slider-labels"><span>{duration(1)}</span><span>{duration(50)}</span></div></fieldset>
         </div></section>
         <section className="panel contribution-panel"><div className="section-heading"><h2><Layers3 size={18} />{t('plan')}</h2><span className="small-badge">{t(phases.length === 1 ? 'phaseCount' : 'phasesCount', { count: number(phases.length) })}</span></div><p className="panel-intro">{t('planIntro')}</p>
-          <div className="phases">{ranges.map((phase, index) => <div className="phase-card" key={phase.id} style={{ '--phase-color': phaseColors[index % phaseColors.length] } as CSSProperties}>
-            <div className="phase-heading"><span className="phase-number">{number(index + 1)}</span><strong>{t('phaseName', { number: index + 1 })}</strong><Button variant="ghost" size="icon-sm" className="remove-phase" aria-label={t('removePhase', { number: index + 1 })} onClick={() => update(state => ({ phases: state.phases.filter(p => p.id !== phase.id) }))}><X size={15} /></Button></div>
-            <div className="phase-inputs"><NumberField id={`amount-${phase.id}`} label={t('phaseAmount', { number: index + 1 })} value={phase.amount} onChange={amount => setPhase(phase.id, { amount })} prefix={symbol} /><Choice label={t('phaseRecurrence', { number: index + 1 })} value={phase.frequency} onChange={frequency => setPhase(phase.id, { frequency })} options={frequencyOptions} /></div>
-            <div className="phase-years"><NumberField id={`start-${phase.id}`} label={t('startYear')} accessibleLabel={t('phaseStart',{number:index+1})} value={phase.startYear} onChange={startYear => setPhase(phase.id, { startYear })} min={1} max={50} step="1" /><NumberField id={`end-${phase.id}`} label={t('endYear')} accessibleLabel={t('phaseEnd',{number:index+1})} value={phase.endYear} onChange={endYear => setPhase(phase.id, { endYear })} min={Math.max(1, Number(phase.startYear) || 1)} max={50} step="1" /></div>
-            {!validPhase(phase) ? <p className="phase-error">{t('phaseError')}</p> : phase.activeYears === 0 ? <p className="phase-status">{t('outside')}</p> : <p className="phase-status">{rangeLabel(Number(phase.startYear), Number(phase.endYear))} · {duration(Number(phase.endYear) - Number(phase.startYear) + 1)}</p>}
-          </div>)}</div>
+          <div className="phases">{phases.map((phase,index)=><ContributionPhase key={phase.id} phase={phase} index={index} years={Number(years)||0} symbol={symbol} color={phaseColors[index%phaseColors.length]} language={language} onChange={patch=>setPhase(phase.id,patch)} onRemove={()=>update(state=>({phases:state.phases.filter(p=>p.id!==phase.id)}))} />)}</div>
           {phases.length === 0 && <p className="empty-phases">{t('emptyPhases')}</p>}
           <Button variant="outline" className="add-phase" onClick={addPhase} disabled={phases.length >= 100}><Plus size={16} />{t('addPhase')}</Button>
           <p className="plan-note">{t('inclusive')}</p>
@@ -139,5 +136,5 @@ export default function Home() {
         </>}
       </section></div><footer><span className="footer-brand">compound.</span><span>{t('footer')}</span><span className="footer-right">{t('footerRight')}</span></footer>
     </main>
-  </div>;
+  </div></TooltipProvider>;
 }

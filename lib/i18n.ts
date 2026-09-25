@@ -1,6 +1,12 @@
 export type Language = 'en' | 'es';
 export const locales: Record<Language, string> = { en: 'en-US', es: 'es-ES' };
 const en = {
+  chooseYears: "Set years",
+  editPhaseRange: "Edit phase {number} years: {range}",
+  phaseRange: "Phase {number} year range",
+  applyRange: "Apply",
+  phaseAmountError: "Enter an amount from 0 to 1 billion.",
+
   save: "Save",
   saved: "Saved",
   cancel: "Cancel",
@@ -51,6 +57,12 @@ const en = {
 };
 export type MessageKey = keyof typeof en;
 const es: Record<MessageKey, string> = {
+  chooseYears: "Elegir años",
+  editPhaseRange: "Editar años de la fase {number}: {range}",
+  phaseRange: "Intervalo de años de la fase {number}",
+  applyRange: "Aplicar",
+  phaseAmountError: "Introduce un importe de 0 a mil millones.",
+
   save: "Guardar",
   saved: "Guardado",
   cancel: "Cancelar",

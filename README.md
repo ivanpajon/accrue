@@ -35,8 +35,10 @@ The calculation tests run directly with Node.js 22.18+ or 24+.
 - USD and EUR formatting (no exchange-rate conversion).
 - English and Spanish translations, including number formatting, charts, help, accessibility labels, and CSV exports. English is the default.
 - Light, stone-grey dark, and system appearance. System is the default and follows live OS changes.
-- Named investment configurations: Save the current investment and contribution plan, load one from the header folder button, explicitly replace an existing name, or delete a saved configuration.
+- Named investment configurations: Save the current investment and contribution plan, load one from the folder button beside Save, explicitly replace an existing name, or delete a saved configuration.
 - Zustand automatically persists language, currency, theme, and chart preferences. Calculator drafts persist only when explicitly saved.
+- Compact icon-only language, appearance, and currency menus in the header; Save and saved configurations beside the page title.
+- Joined contribution amount/frequency controls and accessible year-range sliders, with an exact-year popover for precise editing. Phase dates remain intact when the investment horizon changes.
 - Lucide icons throughout.
 - Accessible shadcn controls, validation, and responsive layout.
 
