@@ -34,7 +34,7 @@
 .configuration-delete{margin-top:12px}
 .configuration-delete>p{font-size:14px;overflow-wrap:anywhere;line-height:1.5}
 .configuration-delete>div{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-.help-button{margin-left:0}
+
 .dialog-close{position:absolute;right:12px;top:12px}
 .how-dialog [data-slot=dialog-title]{padding-right:20px}
 
@@ -102,10 +102,10 @@ html[lang=es] .header-caption{display:none}
 html[lang=es] .metric strong{font-size:clamp(22px,2vw,30px)}
 @media(max-width:1250px){.header-caption,.header-divider{display:none}}
 @media(max-width:960px){.topbar-inner{gap:14px}.journey-axis{margin-left:145px}.journey-lane{grid-template-columns:130px minmax(0,1fr)}}
-@media(max-width:760px){.topbar{height:70px}.topbar-inner{gap:10px}.brand{margin-right:auto}.preferences-controls{width:auto;margin-left:auto}.help-button{margin-left:0;width:34px;min-width:34px;padding:0}.help-button span{display:none}.page-heading{flex-wrap:wrap}.page-heading>.configuration-controls{margin-left:0}.journey-axis{margin-left:150px}.journey-lane{grid-template-columns:135px minmax(0,1fr)}}
+@media(max-width:760px){.topbar{height:70px}.topbar-inner{gap:10px}.brand{margin-right:auto}.preferences-controls{width:auto;margin-left:auto}.page-heading{flex-wrap:wrap}.page-heading>.configuration-controls{margin-left:0}.journey-axis{margin-left:150px}.journey-lane{grid-template-columns:135px minmax(0,1fr)}}
 @media(max-width:580px){.page-heading{display:flex;flex-direction:column;gap:18px}.page-heading h1{max-width:none;padding-right:0}.page-heading p{max-width:100%;padding-right:0}.timeline-title{flex-wrap:wrap}.journey-axis{margin-left:135px}.journey-lane{grid-template-columns:120px minmax(0,1fr)}.journey-label strong{font-size:13px}.chart-legend{flex-wrap:wrap}.metric strong{overflow-wrap:anywhere}}
 
-@media(max-width:580px){.topbar-inner{gap:6px;padding:0 16px}.icon-choice{width:34px;height:38px}.preferences-controls{gap:2px}.help-button{width:30px;min-width:30px;padding:0}}
+@media(max-width:580px){.topbar-inner{gap:6px;padding:0 16px}.icon-choice{width:34px;height:38px}.preferences-controls{gap:2px}}
 
 .dark .contribution-amount-group{background:color-mix(in oklch,var(--input) 30%,transparent)}
 @media(max-width:767px){.contribution-amount input{font-size:1rem}}

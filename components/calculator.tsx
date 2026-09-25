@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ChartNoAxesCombined, CircleHelp, DollarSign, Euro, CodeXml, Info, Layers3, Languages, Monitor, Moon, Sun, Plus, RotateCcw, TrendingUp, Wallet, X } from 'lucide-react';
+import { ChartNoAxesCombined, CircleHelp, DollarSign, Euro, Info, Layers3, Languages, Monitor, Moon, Sun, Plus, RotateCcw, TrendingUp, Wallet, X } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as ChartTooltip, XAxis, YAxis } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
@@ -20,6 +20,7 @@ import { usePreferences } from '@/lib/store';
 import { ConfigurationContext, SavedConfigurations } from '@/components/saved-configurations';
 import { ContributionPhase } from '@/components/contribution-phase';
 import { APP_NAME, REPOSITORY_URL } from '@/lib/brand';
+import { GitHubMark } from '@/components/github-mark';
 import { AccountControls, AccountStatus } from '@/components/account-controls';
 import { ProjectionExports } from '@/components/projection-exports';
 import { type Preferences } from '@/lib/preferences';
@@ -106,12 +107,11 @@ export default function Calculator({displayName,signOutPath,signInPath}:{display
     <header className="topbar"><div className="topbar-inner">
       <div className="brand"><span className="brand-icon"><ChartNoAxesCombined size={21} strokeWidth={2.3} /></span>{APP_NAME}</div>
       <div className="preferences-controls">
-        <AccountControls displayName={displayName} signOutPath={signOutPath} />
         <Choice iconOnly icon={<Languages size={18} />} label={t('language')} value={language} onChange={value => update({ language: value as Preferences['language'] })} options={[{ value: 'en', label: 'English' }, { value: 'es', label: 'Español' }]} />
         <Choice iconOnly icon={theme === 'system' ? <Monitor size={18} /> : theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />} label={t('theme')} value={theme} onChange={value => update({ theme: value as Preferences['theme'] })} options={(['system','light','dark'] as const).map(value => ({ value, label: t(value) }))} />
         <Choice iconOnly icon={currency==='EUR'?<Euro size={18} />:<DollarSign size={18} />} value={currency} onChange={value=>update({currency:value as Preferences['currency']})} label={t('currency')} options={[{value:'USD',label:'USD'},{value:'EUR',label:'EUR'}]} />
+        <AccountControls displayName={displayName} signOutPath={signOutPath} />
       </div>
-      <Dialog><DialogTrigger asChild><Button variant="ghost" className="help-button" aria-label={t('how')}><CircleHelp size={17} /><span>{t('how')}</span></Button></DialogTrigger><DialogContent className="how-dialog" showCloseButton={false}><DialogClose asChild><Button variant="ghost" size="icon-sm" className="dialog-close" aria-label={t('close')}><X size={17} /></Button></DialogClose><DialogHeader><DialogTitle>{t('helpTitle')}</DialogTitle><DialogDescription>{t('helpIntro')}</DialogDescription></DialogHeader><div className="explanation">{(['1','2','3'] as const).map(n => <div key={n}><h3>{t(`help${n}`)}</h3><p>{t(`help${n}Text`)}</p></div>)}<h3>{t('assumptions')}</h3><p>{t('formula')}</p><p>{t('calendar')}</p><p>{t('caveats')}</p><p>{t('storageNote')}</p></div></DialogContent></Dialog>
     </div></header>
     <main className="main-container">
       <section className="page-heading"><div><h1>{t('heading')}</h1><p>{t('subtitle')}</p></div><SavedConfigurations /></section>
@@ -153,7 +153,7 @@ export default function Calculator({displayName,signOutPath,signInPath}:{display
           </section>
           <p className="projection-note"><Info size={15} /><span>{t('note')}</span></p>
         </>}
-      </section></div><footer><span className="footer-brand">{APP_NAME}</span><span>{t('footer')}</span><span className="footer-right">{t('footerRight')}</span><Button asChild variant="ghost" size="sm" className="text-muted-foreground"><a href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer" aria-label={t('githubLink')} title={t('githubLink')}><CodeXml aria-hidden="true" />GitHub</a></Button></footer>
+      </section></div><footer><span className="footer-brand">{APP_NAME}</span><span>{t('footer')}</span><span className="footer-right">{t('footerRight')}</span><div className="footer-actions"><Dialog><DialogTrigger asChild><Button variant="ghost" size="sm" className="footer-help" aria-label={t('how')}><CircleHelp size={17} /><span>{t('how')}</span></Button></DialogTrigger><DialogContent className="how-dialog" showCloseButton={false}><DialogClose asChild><Button variant="ghost" size="icon-sm" className="dialog-close" aria-label={t('close')}><X size={17} /></Button></DialogClose><DialogHeader><DialogTitle>{t('helpTitle')}</DialogTitle><DialogDescription>{t('helpIntro')}</DialogDescription></DialogHeader><div className="explanation">{(['1','2','3'] as const).map(n => <div key={n}><h3>{t(`help${n}`)}</h3><p>{t(`help${n}Text`)}</p></div>)}<h3>{t('assumptions')}</h3><p>{t('formula')}</p><p>{t('calendar')}</p><p>{t('caveats')}</p><p>{t('storageNote')}</p></div></DialogContent></Dialog><Tooltip><TooltipTrigger asChild><Button asChild variant="ghost" size="icon" className="text-muted-foreground"><a href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer" aria-label={t('githubLink')}><GitHubMark /></a></Button></TooltipTrigger><TooltipContent>{t('githubLink')}</TooltipContent></Tooltip></div></footer>
     </main>
   </div></TooltipProvider>;
 }
